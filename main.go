@@ -4,6 +4,8 @@ import (
   "github.com/gin-gonic/gin"
   "github.com/gin-contrib/sessions"
   "github.com/gin-contrib/sessions/cookie"
+
+  "github.com/starnight/member/routes"
 )
 
 func setupRouter() *gin.Engine {
@@ -12,9 +14,9 @@ func setupRouter() *gin.Engine {
   store := cookie.NewStore([]byte("secret"))
   r.Use(sessions.Sessions("sessionid", store))
 
-  r.GET("/", index)
-  r.GET("/ping", ping)
-  r.POST("/login", login)
+  r.GET("/", routes.Index)
+  r.GET("/ping", routes.Ping)
+  r.POST("/login", routes.Login)
 
   return r
 }

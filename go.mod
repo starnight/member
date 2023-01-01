@@ -1,4 +1,4 @@
-module member.com
+module github.com/starnight/member
 
 go 1.19
 

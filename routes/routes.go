@@ -1,4 +1,4 @@
-package main
+package routes
 
 import (
   "fmt"
@@ -11,7 +11,7 @@ func index_welcome(c *gin.Context) {
   c.String(http.StatusOK, "Welcome")
 }
 
-func index(c *gin.Context) {
+func Index(c *gin.Context) {
   session := sessions.Default(c)
 
   account := session.Get("account")
@@ -24,11 +24,11 @@ func index(c *gin.Context) {
   c.String(http.StatusOK, res)
 }
 
-func ping (c *gin.Context) {
+func Ping (c *gin.Context) {
   c.String(http.StatusOK, "pong")
 }
 
-func login (c *gin.Context) {
+func Login (c *gin.Context) {
   account := c.PostForm("account")
   passwd := c.PostForm("passwd")
 
