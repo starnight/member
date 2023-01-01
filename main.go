@@ -17,6 +17,7 @@ func setupRouter() *gin.Engine {
   r.GET("/", routes.Index)
   r.GET("/ping", routes.Ping)
   r.POST("/login", routes.Login)
+  r.GET("/showdate", routes.Showdate)
 
   return r
 }

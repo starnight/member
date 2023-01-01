@@ -2,6 +2,7 @@ package routes
 
 import (
   "fmt"
+  "time"
   "net/http"
   "github.com/gin-gonic/gin"
   "github.com/gin-contrib/sessions"
@@ -43,4 +44,19 @@ func Login (c *gin.Context) {
   session.Save()
 
   c.Status(http.StatusOK)
+}
+
+func Showdate(c *gin.Context) {
+  session := sessions.Default(c)
+
+  account := session.Get("account")
+  if (account == nil) {
+    c.String(http.StatusForbidden, "Please login first")
+    c.Abort()
+    return
+  }
+
+  currentTime := time.Now()
+  res := fmt.Sprintf("Welcome %s %s", account, currentTime.String())
+  c.String(http.StatusOK, res)
 }
