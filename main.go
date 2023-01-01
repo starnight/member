@@ -5,6 +5,7 @@ import (
   "github.com/gin-contrib/sessions"
   "github.com/gin-contrib/sessions/cookie"
 
+  "github.com/starnight/member/middleware"
   "github.com/starnight/member/routes"
 )
 
@@ -18,6 +19,7 @@ func setupRouter() *gin.Engine {
   routes.PublicRoutes(public)
 
   private := r.Group("/")
+  private.Use(middleware.AuthRequired)
   routes.PrivateRoutes(private)
 
   return r

@@ -48,15 +48,9 @@ func Login (c *gin.Context) {
 
 func Showdate(c *gin.Context) {
   session := sessions.Default(c)
-
   account := session.Get("account")
-  if (account == nil) {
-    c.String(http.StatusForbidden, "Please login first")
-    c.Abort()
-    return
-  }
-
   currentTime := time.Now()
+
   res := fmt.Sprintf("Welcome %s %s", account, currentTime.String())
   c.String(http.StatusOK, res)
 }
