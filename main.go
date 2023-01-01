@@ -5,7 +5,7 @@ import (
   "github.com/gin-contrib/sessions"
   "github.com/gin-contrib/sessions/cookie"
 
-  "github.com/starnight/member/controllers"
+  "github.com/starnight/member/routes"
 )
 
 func setupRouter() *gin.Engine {
@@ -14,10 +14,11 @@ func setupRouter() *gin.Engine {
   store := cookie.NewStore([]byte("secret"))
   r.Use(sessions.Sessions("sessionid", store))
 
-  r.GET("/", controllers.Index)
-  r.GET("/ping", controllers.Ping)
-  r.POST("/login", controllers.Login)
-  r.GET("/showdate", controllers.Showdate)
+  public := r.Group("/")
+  routes.PublicRoutes(public)
+
+  private := r.Group("/")
+  routes.PrivateRoutes(private)
 
   return r
 }
