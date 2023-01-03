@@ -6,8 +6,10 @@ OUTPUT=webserver
 all:
 	CGO_ENABLE=${CGO_FLAG} GOOS=${OS} GOARCH=${ARCH} go build -o ${OUTPUT}
 
+t := "/tmp/go-cover.$(shell /bin/bash -c "echo $$RANDOM").tmp"
+
 test:
-	go test
+	go test -coverprofile=$t ./... && go tool cover -html=$t && unlink $t
 
 clean:
 	rm ${OUTPUT}
