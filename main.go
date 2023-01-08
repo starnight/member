@@ -7,7 +7,6 @@ import (
   "github.com/utrack/gin-csrf"
 
   "github.com/starnight/member/middleware"
-  "github.com/starnight/member/routes"
 )
 
 func setupRouter() *gin.Engine {
@@ -25,11 +24,11 @@ func setupRouter() *gin.Engine {
   r.Use(middleware.AddCSRFToken)
 
   public := r.Group("/")
-  routes.PublicRoutes(public)
+  PublicRoutes(public)
 
   private := r.Group("/")
   private.Use(middleware.AuthRequired)
-  routes.PrivateRoutes(private)
+  PrivateRoutes(private)
 
   return r
 }
