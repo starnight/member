@@ -132,4 +132,12 @@ func TestLoginAndShowdate(t *testing.T) {
   assert.Equal(t, http.StatusOK, res3.Code)
   body := fmt.Sprintf("Welcome %s %s", data.Get("account"), time.Now().Format("2006-01-02"))
   assert.Equal(t, body, res3.Body.String()[:len(body)])
+
+  res4 := httptest.NewRecorder()
+  req4, _ := http.NewRequest("GET", "/", nil)
+  copyCookies(req4, res2)
+  r.ServeHTTP(res4, req4)
+
+  assert.Equal(t, http.StatusOK, res4.Code)
+  assert.Equal(t, "Welcome foo", res4.Body.String())
 }
