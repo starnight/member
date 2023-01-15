@@ -21,8 +21,9 @@ func Index(c *gin.Context) {
     return
   }
 
-  res := fmt.Sprintf("Welcome %s", account)
-  c.String(http.StatusOK, res)
+  c.HTML(http.StatusOK, "index.tmpl", gin.H{
+    "account": account,
+  })
 }
 
 func Ping (c *gin.Context) {

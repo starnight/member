@@ -139,5 +139,5 @@ func TestLoginAndShowdate(t *testing.T) {
   r.ServeHTTP(res4, req4)
 
   assert.Equal(t, http.StatusOK, res4.Code)
-  assert.Equal(t, "Welcome foo", res4.Body.String())
+  assert.Equal(t, "<h1>Welcome foo</h1>\n", res4.Body.String())
 }

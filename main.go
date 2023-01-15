@@ -23,6 +23,8 @@ func setupRouter() *gin.Engine {
   }))
   r.Use(middleware.AddCSRFToken)
 
+  r.LoadHTMLGlob("template/*.tmpl")
+
   public := r.Group("/")
   PublicRoutes(public)
 
