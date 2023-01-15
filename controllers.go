@@ -6,6 +6,7 @@ import (
   "net/http"
   "github.com/gin-gonic/gin"
   "github.com/gin-contrib/sessions"
+  "github.com/utrack/gin-csrf"
 )
 
 func index_guest(c *gin.Context) {
@@ -30,6 +31,12 @@ func Ping (c *gin.Context) {
   c.String(http.StatusOK, "pong")
 }
 
+func LoginHTML(c *gin.Context) {
+  c.HTML(http.StatusOK, "login.tmpl", gin.H{
+    "_csrf": csrf.GetToken(c),
+  })
+}
+
 func Login (c *gin.Context) {
   account := c.PostForm("account")
   passwd := c.PostForm("passwd")
@@ -44,7 +51,7 @@ func Login (c *gin.Context) {
   session.Set("account", account)
   session.Save()
 
-  c.Status(http.StatusOK)
+  c.Redirect(http.StatusFound, "/")
 }
 
 func Showdate(c *gin.Context) {

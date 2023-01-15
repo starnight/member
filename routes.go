@@ -7,6 +7,7 @@ import (
 func PublicRoutes (g *gin.RouterGroup) {
   g.GET("/", Index)
   g.GET("/ping", Ping)
+  g.GET("/login", LoginHTML)
   g.POST("/login", Login)
 }
 

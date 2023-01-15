@@ -1,0 +1,9 @@
+<body>
+<h1>Login</h1>
+<form method="POST" action="/login">
+<label for="account">Account:</label><input type="text" id="account" name="account"><br>
+<label for="passwd">Password:</label><input type="text" id="passwd" name="passwd"><br>
+<input type="hidden" id="_csrf" name="_csrf" value="{{._csrf}}" />
+<input type="submit" value="Login">
+</form>
+</body>

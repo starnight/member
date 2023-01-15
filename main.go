@@ -21,7 +21,6 @@ func setupRouter() *gin.Engine {
       c.Abort()
     },
   }))
-  r.Use(middleware.AddCSRFToken)
 
   r.LoadHTMLGlob("template/*.tmpl")
 

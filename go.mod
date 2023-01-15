@@ -7,6 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.8.2
 	github.com/stretchr/testify v1.8.1
 	github.com/utrack/gin-csrf v0.0.0-20190424104817-40fb8d2c8fca
+	golang.org/x/net v0.4.0
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.20.12
 )
@@ -34,7 +35,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
-	golang.org/x/net v0.4.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
