@@ -1,0 +1,29 @@
+<head>
+<script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+</head>
+<body>
+<h1>Add User</h1>
+<form method="POST" action="/adduser">
+<label for="account">Account:</label><input type="text" id="account" name="account" required><br>
+<label for="passwd">Password:</label><input type="text" id="passwd" name="passwd" required><br>
+<input type="hidden" id="_csrf" name="_csrf" value="{{._csrf}}" />
+<input type="submit" value="Add">
+</form>
+<script>
+/* Attach a submit handler to the form */
+$("form[action='/adduser']").submit(function (event) {
+  /* Stop form from submitting normally */
+  event.preventDefault();
+
+  $.post("/adduser", {
+    account: $("input[name='account']").val(),
+    passwd: $("input[name='passwd']").val(),
+    _csrf: $("input[name='_csrf']").val(),
+  }).done(function () {
+    location.replace("/")
+  }).fail(function (data) {
+    alert(data);
+  });
+});
+</script>
+</body>

@@ -31,6 +31,25 @@ func Ping (c *gin.Context) {
   c.String(http.StatusOK, "pong")
 }
 
+func AddUserHTML(c *gin.Context) {
+  c.HTML(http.StatusOK, "adduser.tmpl", gin.H{
+    "_csrf": csrf.GetToken(c),
+  })
+}
+
+func AddUser(c *gin.Context) {
+  account := c.PostForm("account")
+  passwd := c.PostForm("passwd")
+
+  if (account == "" || passwd == "") {
+    c.String(http.StatusBadRequest, "Wrong account or password")
+    c.Abort()
+    return
+  }
+
+  c.Status(http.StatusOK)
+}
+
 func LoginHTML(c *gin.Context) {
   c.HTML(http.StatusOK, "login.tmpl", gin.H{
     "_csrf": csrf.GetToken(c),

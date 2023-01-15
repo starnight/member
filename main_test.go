@@ -91,6 +91,80 @@ func TestShowdateWithoutLogin(t *testing.T) {
   assert.Equal(t, "Please login first", res.Body.String())
 }
 
+func TestAddUserWrong(t *testing.T) {
+  r := setupRouter()
+
+  /* Request adduser with GET method to have session and CSRF token */
+  res1 := httptest.NewRecorder()
+  req1, _ := http.NewRequest("GET", "/adduser", nil)
+  r.ServeHTTP(res1, req1)
+
+  expected_adduser := "<h1>Add User</h1>"
+  expected_csrf := "name=\"_csrf\""
+
+  assert.Equal(t, http.StatusOK, res1.Code)
+  assert.True(t, strings.Contains(res1.Body.String(), expected_adduser))
+  assert.True(t, strings.Contains(res1.Body.String(), expected_csrf))
+
+  csrf_token := getCSRFToken(res1)
+  assert.True(t, len(csrf_token) > 0)
+
+  /* Requests with session and the CSRF token, but bad POST form fields */
+  res2 := httptest.NewRecorder()
+  data := url.Values{}
+  data.Set("_csrf", csrf_token)
+  req2, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data.Encode()))
+  req2.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req2, res1)
+  r.ServeHTTP(res2, req2)
+
+  assert.Equal(t, http.StatusBadRequest, res2.Code)
+  assert.Equal(t, "Wrong account or password", res2.Body.String())
+
+  res3 := httptest.NewRecorder()
+  data.Set("account", "foo")
+  req3, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data.Encode()))
+  req3.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req3, res1)
+  r.ServeHTTP(res3, req3)
+
+  assert.Equal(t, http.StatusBadRequest, res3.Code)
+  assert.Equal(t, "Wrong account or password", res3.Body.String())
+}
+
+func TestAddUserSuccess(t *testing.T) {
+  r := setupRouter()
+
+  /* Request adduser with GET method to have session and CSRF token */
+  res1 := httptest.NewRecorder()
+  req1, _ := http.NewRequest("GET", "/adduser", nil)
+  r.ServeHTTP(res1, req1)
+
+  expected_adduser := "<h1>Add User</h1>"
+  expected_csrf := "name=\"_csrf\""
+
+  assert.Equal(t, http.StatusOK, res1.Code)
+  assert.True(t, strings.Contains(res1.Body.String(), expected_adduser))
+  assert.True(t, strings.Contains(res1.Body.String(), expected_csrf))
+
+  csrf_token := getCSRFToken(res1)
+  assert.True(t, len(csrf_token) > 0)
+
+  /* Requests with session, the CSRF token, and correct POST form fields */
+  res2 := httptest.NewRecorder()
+  data := url.Values{}
+  data.Set("account", "foo")
+  data.Set("passwd", "bar")
+  data.Set("_csrf", csrf_token)
+  req2, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data.Encode()))
+  req2.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req2, res1)
+  r.ServeHTTP(res2, req2)
+
+  assert.Equal(t, http.StatusOK, res2.Code)
+  assert.Equal(t, "", res2.Body.String())
+}
+
 func TestFailedLogin(t *testing.T) {
   r := setupRouter()
 
