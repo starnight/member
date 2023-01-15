@@ -13,4 +13,4 @@ test:
 	rm test.db database/test.db
 
 clean:
-	rm ${OUTPUT}
+	rm ${OUTPUT} product.db
