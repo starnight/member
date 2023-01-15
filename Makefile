@@ -9,8 +9,8 @@ all:
 t := "/tmp/go-cover.$(shell /bin/bash -c "date +%Y%m%d%H%M%S").tmp"
 
 test:
-	go test -coverprofile=$t ./... && go tool cover -html=$t && unlink $t; \
-	rm database/test.db
+	GIN_MODE=test bash -c 'go test -coverprofile=$t ./... && go tool cover -html=$t && unlink $t'; \
+	rm test.db database/test.db
 
 clean:
 	rm ${OUTPUT}

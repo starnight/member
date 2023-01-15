@@ -7,7 +7,20 @@ import (
   "github.com/utrack/gin-csrf"
 
   "github.com/starnight/member/middleware"
+  "github.com/starnight/member/database"
 )
+
+func setupDB() {
+  dbstr := database.GetDBStr(gin.Mode())
+  db := database.ConnectDB(dbstr)
+  utils := database.UserUtils{DB: db}
+
+  _, err := utils.Count()
+
+  if (err != nil) {
+    database.CreateTables(db)
+  }
+}
 
 func setupRouter() *gin.Engine {
   r := gin.Default()
@@ -35,6 +48,8 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+  setupDB()
+
   r := setupRouter()
   r.Run(":8080")
 }

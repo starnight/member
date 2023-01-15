@@ -1,6 +1,9 @@
 package main
 
 import (
+  "github.com/gin-gonic/gin"
+  "github.com/starnight/member/database"
+
   "fmt"
   "strings"
   "testing"
@@ -54,6 +57,22 @@ func getCSRFToken(res *httptest.ResponseRecorder) (token string) {
   }
 
   return token
+}
+
+func TestSetupDB(t *testing.T) {
+  setupDB()
+
+  dbstr := database.GetDBStr(gin.Mode())
+  db := database.ConnectDB(dbstr)
+
+  assert.NotNil(t, db)
+
+  utils := database.UserUtils{DB: db}
+
+  cnt, err := utils.Count()
+
+  assert.Equal(t, cnt, int64(0))
+  assert.Nil(t, err)
 }
 
 func TestPing(t *testing.T) {
