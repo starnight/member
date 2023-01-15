@@ -9,10 +9,12 @@ func PublicRoutes (g *gin.RouterGroup) {
   g.GET("/ping", Ping)
   g.GET("/login", LoginHTML)
   g.POST("/login", Login)
-  g.GET("/adduser", AddUserHTML)
-  g.POST("/adduser", AddUser)
+  g.GET("/add1stuser", Add1stUserHTML)
+  g.POST("/add1stuser", Add1stUser)
 }
 
 func PrivateRoutes (g *gin.RouterGroup) {
+  g.GET("/adduser", AddUserHTML)
+  g.POST("/adduser", AddUser)
   g.GET("/showdate", Showdate)
 }

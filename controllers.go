@@ -28,8 +28,14 @@ func index_guest(c *gin.Context) {
 }
 
 func Index(c *gin.Context) {
-  session := sessions.Default(c)
+  utils := database.UserUtils{DB: database.ConnectDB("")}
+  cnt, _ := utils.Count()
+  if (cnt == 0) {
+    c.Redirect(http.StatusFound, "/add1stuser")
+    return
+  }
 
+  session := sessions.Default(c)
   account := session.Get("account")
   if (account == nil) {
     index_guest(c)
@@ -65,6 +71,28 @@ func AddUser(c *gin.Context) {
   utils.Add(account, hashSHA512(passwd))
 
   c.Status(http.StatusOK)
+}
+
+func Add1stUserHTML(c *gin.Context) {
+  utils := database.UserUtils{DB: database.ConnectDB("")}
+  cnt, _ := utils.Count()
+  if (cnt != 0) {
+    c.Redirect(http.StatusFound, "/")
+    return
+  }
+
+  AddUserHTML(c)
+}
+
+func Add1stUser(c *gin.Context) {
+  utils := database.UserUtils{DB: database.ConnectDB("")}
+  cnt, _ := utils.Count()
+  if (cnt != 0) {
+    c.Status(http.StatusForbidden)
+    return
+  }
+
+  AddUser(c)
 }
 
 func LoginHTML(c *gin.Context) {

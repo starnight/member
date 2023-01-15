@@ -3,7 +3,7 @@
 </head>
 <body>
 <h1>Add User</h1>
-<form method="POST" action="/adduser">
+<form id="adduser" method="POST">
 <label for="account">Account:</label><input type="text" id="account" name="account" required><br>
 <label for="passwd">Password:</label><input type="text" id="passwd" name="passwd" required><br>
 <input type="hidden" id="_csrf" name="_csrf" value="{{._csrf}}" />
@@ -11,11 +11,14 @@
 </form>
 <script>
 /* Attach a submit handler to the form */
-$("form[action='/adduser']").submit(function (event) {
+var curpath = window.location.pathname;
+$("#adduser").attr("action", curpath)
+
+$("#adduser").submit(function (event) {
   /* Stop form from submitting normally */
   event.preventDefault();
 
-  $.post("/adduser", {
+  $.post(curpath, {
     account: $("input[name='account']").val(),
     passwd: $("input[name='passwd']").val(),
     _csrf: $("input[name='_csrf']").val(),
