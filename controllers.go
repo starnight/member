@@ -3,11 +3,25 @@ package main
 import (
   "fmt"
   "time"
+  "crypto/sha512"
+  "encoding/hex"
   "net/http"
   "github.com/gin-gonic/gin"
   "github.com/gin-contrib/sessions"
   "github.com/utrack/gin-csrf"
+  "github.com/starnight/member/database"
 )
+
+func hashSHA512(text string) string {
+  txtByte := []byte(text)
+  sha512 := sha512.New()
+
+  sha512.Write(txtByte)
+
+  hashedtxt := sha512.Sum(nil)
+
+  return hex.EncodeToString(hashedtxt)
+}
 
 func index_guest(c *gin.Context) {
   c.File("./resource/index_guest.html")
@@ -47,6 +61,9 @@ func AddUser(c *gin.Context) {
     return
   }
 
+  utils := database.UserUtils{DB: database.ConnectDB("")}
+  utils.Add(account, hashSHA512(passwd))
+
   c.Status(http.StatusOK)
 }
 
@@ -60,7 +77,10 @@ func Login (c *gin.Context) {
   account := c.PostForm("account")
   passwd := c.PostForm("passwd")
 
-  if (account == "" || passwd == "") {
+  utils := database.UserUtils{DB: database.ConnectDB("")}
+  _, err := utils.Get(account, hashSHA512(passwd))
+
+  if (err != nil) {
     c.String(http.StatusForbidden, "Wrong account or password")
     c.Abort()
     return
