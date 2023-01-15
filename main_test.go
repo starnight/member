@@ -44,8 +44,10 @@ func TestRootWithoutLogin(t *testing.T) {
   req, _ := http.NewRequest("GET", "/", nil)
   r.ServeHTTP(res, req)
 
+  expected_body := "<h1>Welcome</h1>"
+
   assert.Equal(t, http.StatusOK, res.Code)
-  assert.Equal(t, "Welcome", res.Body.String())
+  assert.Equal(t, expected_body, res.Body.String()[:len(expected_body)])
 }
 
 func TestShowdateWithoutLogin(t *testing.T) {

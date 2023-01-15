@@ -8,8 +8,8 @@ import (
   "github.com/gin-contrib/sessions"
 )
 
-func index_welcome(c *gin.Context) {
-  c.String(http.StatusOK, "Welcome")
+func index_guest(c *gin.Context) {
+  c.File("./resource/index_guest.html")
 }
 
 func Index(c *gin.Context) {
@@ -17,7 +17,7 @@ func Index(c *gin.Context) {
 
   account := session.Get("account")
   if (account == nil) {
-    index_welcome(c)
+    index_guest(c)
     return
   }
 
