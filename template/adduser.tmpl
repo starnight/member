@@ -5,7 +5,7 @@
 <h1>Add User</h1>
 <form id="adduser" method="POST">
 <label for="account">Account:</label><input type="text" id="account" name="account" required><br>
-<label for="passwd">Password:</label><input type="text" id="passwd" name="passwd" required><br>
+<label for="passwd">Password:</label><input type="password" id="passwd" name="passwd" required><br>
 <input type="hidden" id="_csrf" name="_csrf" value="{{._csrf}}" />
 <input type="submit" value="Add">
 </form>
