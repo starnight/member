@@ -8,14 +8,15 @@ type User struct {
   gorm.Model
   Account string `gorm:"unique;not null"`
   Passwd string `gorm:"not null"`
+  Email string `gorm:"unique;not null"`
 }
 
 type UserUtils struct {
   DB *gorm.DB
 }
 
-func (utils *UserUtils) Add(account string, passwd string) (User, error) {
-  user := User{Account: account, Passwd: passwd}
+func (utils *UserUtils) Add(account string, passwd string, email string) (User, error) {
+  user := User{Account: account, Passwd: passwd, Email: email}
   res := utils.DB.Create(&user)
   return user, res.Error
 }

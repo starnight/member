@@ -20,19 +20,19 @@ It listens on port 8080.
 
 1. Access root page http://localhost:8080/ at first time, it will redirect user to http://localhost:8080/add1stuser
    
-   ![](https://i.imgur.com/jJDOD5W.png)
+   ![](https://i.imgur.com/5oduth0.png)
 
 2. After added the user, it will redirect user to the root page with welcome
    
-   ![](https://i.imgur.com/ZpvYgso.png)
+   ![](https://i.imgur.com/3oEfVaR.png)
 
 3. Click the **Login**.  It goes to login page http://localhost:8080/login
    
-   ![](https://i.imgur.com/CkI89Hu.png)
+   ![](https://i.imgur.com/nA1RtO1.png)
 
 4. Input the user's account and password which are added by add first user process.  Then, it goes to the root page with welcome **user**
    
-   ![](https://i.imgur.com/uAqj8Do.png)
+   ![](https://i.imgur.com/AQvWxfX.png)
 
 ## Access the web server with cURL
 
@@ -60,7 +60,7 @@ $ curl -v http://localhost:8080/
 ```
 
 * Login and go to index page again:
-1. Login with **POST** method and a form data: `account`: `foo` and `passwd`: `bar`.  Also, need the cookie `sessionid` and the CSRF token `_csrf` from the login page's hidden input with id `_csrf`.
+1. Login with **POST** method and a form data: `account`: `<account>` and `passwd`: `<password>` which we added before.  Also, need the cookie `sessionid` and the CSRF token `_csrf` from the login page's hidden input with id `_csrf`.
 2. Take the cookie `sessionid` and request the index page again.  The response should include the account.
 ```shell
 $ curl -v http://localhost:8080/login

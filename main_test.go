@@ -117,6 +117,7 @@ func TestAdd1stUser(t *testing.T) {
   data1 := url.Values{}
   data1.Set("account", "foo")
   data1.Set("passwd", "bar")
+  data1.Set("email", "foo@bar.idv")
   data1.Set("_csrf", csrf_token)
   req3, _ := http.NewRequest("POST", "/add1stuser", strings.NewReader(data1.Encode()))
   req3.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -139,6 +140,7 @@ func TestAdd1stUser(t *testing.T) {
   data2 := url.Values{}
   data2.Set("account", "fooagain")
   data2.Set("passwd", "bar")
+  data2.Set("email", "fooagain@bar.idv")
   data2.Set("_csrf", csrf_token)
   req5, _ := http.NewRequest("POST", "/add1stuser", strings.NewReader(data2.Encode()))
   req5.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -325,7 +327,7 @@ func TestAddUserWrong(t *testing.T) {
   r.ServeHTTP(res4, req4)
 
   assert.Equal(t, http.StatusBadRequest, res4.Code)
-  assert.Equal(t, "Wrong account or password", res4.Body.String())
+  assert.Equal(t, "Wrong account, password or email address", res4.Body.String())
 
   res5 := httptest.NewRecorder()
   data2.Set("account", "foo2")
@@ -335,7 +337,18 @@ func TestAddUserWrong(t *testing.T) {
   r.ServeHTTP(res5, req5)
 
   assert.Equal(t, http.StatusBadRequest, res5.Code)
-  assert.Equal(t, "Wrong account or password", res5.Body.String())
+  assert.Equal(t, "Wrong account, password or email address", res5.Body.String())
+
+  res6 := httptest.NewRecorder()
+  data2.Set("account", "foo2")
+  data2.Set("passwd", "bar2")
+  req6, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data2.Encode()))
+  req6.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req6, res2)
+  r.ServeHTTP(res6, req6)
+
+  assert.Equal(t, http.StatusBadRequest, res6.Code)
+  assert.Equal(t, "Wrong account, password or email address", res6.Body.String())
 }
 
 func TestAddUserSuccess(t *testing.T) {
@@ -385,6 +398,7 @@ func TestAddUserSuccess(t *testing.T) {
   data2 := url.Values{}
   data2.Set("account", "foo2")
   data2.Set("passwd", "bar2")
+  data2.Set("email", "foo2@bar2.idv")
   data2.Set("_csrf", csrf_token)
   req4, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data2.Encode()))
   req4.Header.Set("Content-Type", "application/x-www-form-urlencoded")

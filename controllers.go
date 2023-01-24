@@ -60,15 +60,16 @@ func AddUserHTML(c *gin.Context) {
 func AddUser(c *gin.Context) {
   account := c.PostForm("account")
   passwd := c.PostForm("passwd")
+  email := c.PostForm("email")
 
-  if (account == "" || passwd == "") {
-    c.String(http.StatusBadRequest, "Wrong account or password")
+  if (account == "" || passwd == "" || email =="") {
+    c.String(http.StatusBadRequest, "Wrong account, password or email address")
     c.Abort()
     return
   }
 
   utils := database.UserUtils{DB: database.ConnectDB("")}
-  utils.Add(account, hashSHA512(passwd))
+  utils.Add(account, hashSHA512(passwd), email)
 
   c.Status(http.StatusOK)
 }

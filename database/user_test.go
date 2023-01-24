@@ -9,24 +9,28 @@ func TestAddUser(t *testing.T) {
   utils := UserUtils{DB: ConnectDB(GetDBStr("test"))}
   account := "foo"
   passwd := "bar"
+  email := "foo@bar.idv"
 
-  user, err := utils.Add(account, passwd)
+  user, err := utils.Add(account, passwd, email)
 
   assert.Nil(t, err)
   assert.Equal(t, user.Account, account)
   assert.Equal(t, user.Passwd, passwd)
+  assert.Equal(t, user.Email, email)
 }
 
 func TestGetUserSuccess(t *testing.T) {
   utils := UserUtils{DB: ConnectDB(GetDBStr("test"))}
   account := "foo"
   passwd := "bar"
+  email := "foo@bar.idv"
 
   user, err := utils.Get(account, passwd)
 
   assert.Nil(t, err)
   assert.Equal(t, user.Account, account)
   assert.Equal(t, user.Passwd, passwd)
+  assert.Equal(t, user.Email, email)
 }
 
 func TestGetUserNone(t *testing.T) {
