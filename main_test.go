@@ -393,12 +393,13 @@ func TestAddUserSuccess(t *testing.T) {
   csrf_token = getCSRFToken(res3)
   assert.True(t, len(csrf_token) > 0)
 
-  /* Requests with session, the CSRF token, and correct POST form fields */
+  /* Requests with session, the CSRF token, and correct POST form fields to add a guest */
   res4 := httptest.NewRecorder()
   data2 := url.Values{}
   data2.Set("account", "foo2")
   data2.Set("passwd", "bar2")
   data2.Set("email", "foo2@bar2.idv")
+  data2.Set("role", "guest")
   data2.Set("_csrf", csrf_token)
   req4, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data2.Encode()))
   req4.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -407,4 +408,19 @@ func TestAddUserSuccess(t *testing.T) {
 
   assert.Equal(t, http.StatusOK, res4.Code)
   assert.Equal(t, "", res4.Body.String())
+
+  /* Requests with session, the CSRF token, and correct POST form fields to add another administrator */
+  res5 := httptest.NewRecorder()
+  data2.Set("account", "foo3")
+  data2.Set("passwd", "bar3")
+  data2.Set("email", "foo3@bar3.idv")
+  data2.Set("role", "Administrator")
+  data2.Set("_csrf", csrf_token)
+  req5, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data2.Encode()))
+  req5.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req5, res2)
+  r.ServeHTTP(res5, req5)
+
+  assert.Equal(t, http.StatusOK, res5.Code)
+  assert.Equal(t, "", res5.Body.String())
 }

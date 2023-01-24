@@ -52,7 +52,14 @@ func Ping (c *gin.Context) {
 }
 
 func AddUserHTML(c *gin.Context) {
+  add1stuser := false
+
+  if (c.Request.URL.Path == "/add1stuser") {
+    add1stuser = true
+  }
+
   c.HTML(http.StatusOK, "adduser.tmpl", gin.H{
+    "IsAdd1stUser": add1stuser,
     "_csrf": csrf.GetToken(c),
   })
 }
@@ -61,6 +68,17 @@ func AddUser(c *gin.Context) {
   account := c.PostForm("account")
   passwd := c.PostForm("passwd")
   email := c.PostForm("email")
+  role := database.Guest
+
+  if (c.Request.URL.Path == "/add1stuser") {
+    /* The first user should be an Administrator for following management */
+    role = database.Administrator
+  } else {
+    switch c.PostForm("role") {
+      case "Administrator":
+        role = database.Administrator
+    }
+  }
 
   if (account == "" || passwd == "" || email =="") {
     c.String(http.StatusBadRequest, "Wrong account, password or email address")
@@ -69,7 +87,7 @@ func AddUser(c *gin.Context) {
   }
 
   utils := database.UserUtils{DB: database.ConnectDB("")}
-  utils.Add(account, hashSHA512(passwd), email)
+  utils.Add(account, hashSHA512(passwd), email, role)
 
   c.Status(http.StatusOK)
 }

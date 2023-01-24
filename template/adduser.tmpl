@@ -4,9 +4,17 @@
 <body>
 <h1>Add User</h1>
 <form id="adduser" method="POST">
-<label for="account">Account:</label><input type="text" id="account" name="account" required><br>
-<label for="passwd">Password:</label><input type="password" id="passwd" name="passwd" required><br>
-<label for="email">Email:</label><input type="email" id="email" name="email" required><br>
+Account:<input type="text" id="account" name="account" required><br>
+Password:<input type="password" id="passwd" name="passwd" required><br>
+Email:<input type="email" id="email" name="email" required><br>
+{{if .IsAdd1stUser}}
+<input type="hidden" name="role" value="Admininstrator">
+{{else}}
+Role:
+<input type="radio" name="role" value="Guest" checked>Guest
+<input type="radio" name="role" value="Administrator">Administrator
+<br>
+{{end}}
 <input type="hidden" id="_csrf" name="_csrf" value="{{._csrf}}" />
 <input type="submit" value="Add">
 </form>
@@ -23,6 +31,7 @@ $("#adduser").submit(function (event) {
     account: $("input[name='account']").val(),
     passwd: $("input[name='passwd']").val(),
     email: $("input[name='email']").val(),
+    role: $("input[name='role']:checked").val(),
     _csrf: $("input[name='_csrf']").val(),
   }).done(function () {
     location.replace("/")

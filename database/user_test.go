@@ -10,13 +10,16 @@ func TestAddUser(t *testing.T) {
   account := "foo"
   passwd := "bar"
   email := "foo@bar.idv"
+  role := Administrator
 
-  user, err := utils.Add(account, passwd, email)
+  user, err := utils.Add(account, passwd, email, role)
 
   assert.Nil(t, err)
   assert.Equal(t, user.Account, account)
   assert.Equal(t, user.Passwd, passwd)
   assert.Equal(t, user.Email, email)
+  assert.Equal(t, user.Role, role)
+
 }
 
 func TestGetUserSuccess(t *testing.T) {
@@ -24,6 +27,7 @@ func TestGetUserSuccess(t *testing.T) {
   account := "foo"
   passwd := "bar"
   email := "foo@bar.idv"
+  role := Administrator
 
   user, err := utils.Get(account, passwd)
 
@@ -31,6 +35,7 @@ func TestGetUserSuccess(t *testing.T) {
   assert.Equal(t, user.Account, account)
   assert.Equal(t, user.Passwd, passwd)
   assert.Equal(t, user.Email, email)
+  assert.Equal(t, user.Role, role)
 }
 
 func TestGetUserNone(t *testing.T) {

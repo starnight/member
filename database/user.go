@@ -4,19 +4,30 @@ import (
   "gorm.io/gorm"
 )
 
+const (
+  Guest uint32 = 0
+  Administrator = ^uint32(0)
+)
+
 type User struct {
   gorm.Model
   Account string `gorm:"unique;not null"`
   Passwd string `gorm:"not null"`
   Email string `gorm:"unique;not null"`
+  Role uint32 `gorm:"default:0;not null"`
 }
 
 type UserUtils struct {
   DB *gorm.DB
 }
 
-func (utils *UserUtils) Add(account string, passwd string, email string) (User, error) {
-  user := User{Account: account, Passwd: passwd, Email: email}
+func (utils *UserUtils) Add(account string, passwd string, email string, role uint32) (User, error) {
+  user := User{
+    Account: account,
+    Passwd: passwd,
+    Email: email,
+    Role: uint32(role),
+  }
   res := utils.DB.Create(&user)
   return user, res.Error
 }
