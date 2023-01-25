@@ -23,6 +23,18 @@ func hashSHA512(text string) string {
   return hex.EncodeToString(hashedtxt)
 }
 
+func IsAuthorized(id uint, role uint32) bool {
+  utils := database.UserUtils{DB: database.ConnectDB("")}
+  cur_user, _ := utils.GetById(id)
+  res := false
+
+  if (cur_user.Role == role) {
+    res = true
+  }
+
+  return res
+}
+
 func index_guest(c *gin.Context) {
   c.File("./resource/index_guest.html")
 }
@@ -56,6 +68,15 @@ func AddUserHTML(c *gin.Context) {
 
   if (c.Request.URL.Path == "/add1stuser") {
     add1stuser = true
+  } else {
+    /* Only Administrator can add users.  Others are forbidden */
+    session := sessions.Default(c)
+    id := session.Get("id").(uint)
+    if (!IsAuthorized(id, database.Administrator)) {
+      c.Status(http.StatusForbidden)
+      c.Abort()
+      return
+    }
   }
 
   c.HTML(http.StatusOK, "adduser.tmpl", gin.H{
@@ -74,6 +95,15 @@ func AddUser(c *gin.Context) {
     /* The first user should be an Administrator for following management */
     role = database.Administrator
   } else {
+    /* Only Administrator can add users.  Others are forbidden */
+    session := sessions.Default(c)
+    id := session.Get("id").(uint)
+    if (!IsAuthorized(id, database.Administrator)) {
+      c.Status(http.StatusForbidden)
+      c.Abort()
+      return
+    }
+
     switch c.PostForm("role") {
       case "Administrator":
         role = database.Administrator
@@ -125,7 +155,7 @@ func Login (c *gin.Context) {
   passwd := c.PostForm("passwd")
 
   utils := database.UserUtils{DB: database.ConnectDB("")}
-  _, err := utils.Get(account, hashSHA512(passwd))
+  user, err := utils.Get(account, hashSHA512(passwd))
 
   if (err != nil) {
     c.String(http.StatusForbidden, "Wrong account or password")
@@ -134,7 +164,8 @@ func Login (c *gin.Context) {
   }
 
   session := sessions.Default(c)
-  session.Set("account", account)
+  session.Set("id", user.ID)
+  session.Set("account", user.Account)
   session.Save()
 
   c.Redirect(http.StatusFound, "/")

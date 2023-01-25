@@ -38,6 +38,12 @@ func (utils *UserUtils) Get(account string, passwd string) (User, error) {
   return user, res.Error
 }
 
+func (utils *UserUtils) GetById(id uint) (User, error) {
+  var user User
+  res := utils.DB.Where("ID = ?", id).First(&user)
+  return user, res.Error
+}
+
 func (utils *UserUtils) Count() (int64, error) {
   var cnt int64 = 0
   res := utils.DB.Model(&User{}).Count(&cnt)

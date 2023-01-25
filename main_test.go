@@ -424,3 +424,53 @@ func TestAddUserSuccess(t *testing.T) {
   assert.Equal(t, http.StatusOK, res5.Code)
   assert.Equal(t, "", res5.Body.String())
 }
+
+func TestGuestAddUser(t *testing.T) {
+  r := setupRouter()
+
+  /* Have the session and the CSRF token for following POST request */
+  res1 := httptest.NewRecorder()
+  req1, _ := http.NewRequest("GET", "/login", nil)
+  r.ServeHTTP(res1, req1)
+
+  assert.Equal(t, http.StatusOK, res1.Code)
+  csrf_token := getCSRFToken(res1)
+  assert.True(t, len(csrf_token) > 0)
+
+  res2 := httptest.NewRecorder()
+  data1 := url.Values{}
+  data1.Set("account", "foo2")
+  data1.Set("passwd", "bar2")
+  data1.Set("_csrf", csrf_token)
+  req2, _ := http.NewRequest("POST", "/login", strings.NewReader(data1.Encode()))
+  req2.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req2, res1)
+  r.ServeHTTP(res2, req2)
+
+  assert.Equal(t, http.StatusFound, res2.Code)
+  assert.Equal(t, "/", res2.Header().Get("Location"))
+  assert.Equal(t, "", res2.Body.String())
+
+  /* Guest requests adduser with GET method */
+  res3 := httptest.NewRecorder()
+  req3, _ := http.NewRequest("GET", "/adduser", nil)
+  copyCookies(req3, res2)
+  r.ServeHTTP(res3, req3)
+
+  assert.Equal(t, http.StatusForbidden, res3.Code)
+  assert.Equal(t, "", res3.Body.String())
+
+  /* Guest requests adduser with POST method */
+  res4 := httptest.NewRecorder()
+  data2 := url.Values{}
+  data2.Set("account", "foo4")
+  data2.Set("passwd", "bar4")
+  data2.Set("email", "foo4@bar4.idv")
+  data2.Set("role", "Administrator")
+  data2.Set("_csrf", csrf_token)
+  req4, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data2.Encode()))
+  copyCookies(req4, res2)
+  r.ServeHTTP(res4, req4)
+
+  assert.Equal(t, http.StatusBadRequest, res4.Code)
+}
