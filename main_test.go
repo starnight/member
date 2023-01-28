@@ -353,6 +353,7 @@ func TestAddUserWrong(t *testing.T) {
 
 func TestAddUserSuccess(t *testing.T) {
   r := setupRouter()
+  utils := database.UserUtils{DB: database.ConnectDB("")}
 
   /* Have the session and the CSRF token for following POST request */
   res1 := httptest.NewRecorder()
@@ -409,6 +410,13 @@ func TestAddUserSuccess(t *testing.T) {
   assert.Equal(t, http.StatusOK, res4.Code)
   assert.Equal(t, "", res4.Body.String())
 
+  user2, err := utils.Get("foo2", hashSHA512("bar2"))
+  assert.Nil(t, err)
+  assert.Equal(t, "foo2", user2.Account)
+  assert.Equal(t, hashSHA512("bar2"), user2.Passwd)
+  assert.Equal(t, "foo2@bar2.idv", user2.Email)
+  assert.Equal(t, database.Guest, user2.Role)
+
   /* Requests with session, the CSRF token, and correct POST form fields to add another administrator */
   res5 := httptest.NewRecorder()
   data2.Set("account", "foo3")
@@ -423,6 +431,13 @@ func TestAddUserSuccess(t *testing.T) {
 
   assert.Equal(t, http.StatusOK, res5.Code)
   assert.Equal(t, "", res5.Body.String())
+
+  user3, err := utils.Get("foo3", hashSHA512("bar3"))
+  assert.Nil(t, err)
+  assert.Equal(t, "foo3", user3.Account)
+  assert.Equal(t, hashSHA512("bar3"), user3.Passwd)
+  assert.Equal(t, "foo3@bar3.idv", user3.Email)
+  assert.Equal(t, database.Administrator, user3.Role)
 }
 
 func TestGuestAddUser(t *testing.T) {
@@ -460,17 +475,289 @@ func TestGuestAddUser(t *testing.T) {
   assert.Equal(t, http.StatusForbidden, res3.Code)
   assert.Equal(t, "", res3.Body.String())
 
-  /* Guest requests adduser with POST method */
+  /* Guest requests updateuser with GET method to borrow CSRF token */
   res4 := httptest.NewRecorder()
+  req4, _ := http.NewRequest("GET", "/updateuser/2", nil)
+  copyCookies(req4, res2)
+  r.ServeHTTP(res4, req4)
+
+  assert.Equal(t, http.StatusOK, res4.Code)
+  csrf_token = getCSRFToken(res4)
+  assert.True(t, len(csrf_token) > 0)
+
+  /* Guest requests adduser with POST method */
+  res5 := httptest.NewRecorder()
   data2 := url.Values{}
   data2.Set("account", "foo4")
   data2.Set("passwd", "bar4")
   data2.Set("email", "foo4@bar4.idv")
   data2.Set("role", "Administrator")
   data2.Set("_csrf", csrf_token)
-  req4, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data2.Encode()))
+  req5, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data2.Encode()))
+  copyCookies(req5, res4)
+  r.ServeHTTP(res5, req5)
+
+  assert.Equal(t, http.StatusBadRequest, res5.Code)
+}
+
+func TestGuestUpdateUser(t *testing.T) {
+  r := setupRouter()
+  utils := database.UserUtils{DB: database.ConnectDB("")}
+
+  /* Have the session and the CSRF token for following POST request */
+  res1 := httptest.NewRecorder()
+  req1, _ := http.NewRequest("GET", "/login", nil)
+  r.ServeHTTP(res1, req1)
+
+  assert.Equal(t, http.StatusOK, res1.Code)
+  csrf_token := getCSRFToken(res1)
+  assert.True(t, len(csrf_token) > 0)
+
+  res2 := httptest.NewRecorder()
+  data1 := url.Values{}
+  data1.Set("account", "foo2")
+  data1.Set("passwd", "bar2")
+  data1.Set("_csrf", csrf_token)
+  req2, _ := http.NewRequest("POST", "/login", strings.NewReader(data1.Encode()))
+  req2.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req2, res1)
+  r.ServeHTTP(res2, req2)
+
+  assert.Equal(t, http.StatusFound, res2.Code)
+  assert.Equal(t, "/", res2.Header().Get("Location"))
+  assert.Equal(t, "", res2.Body.String())
+
+  /* Request updateuser with GET method to have session and CSRF token */
+  res3 := httptest.NewRecorder()
+  req3, _ := http.NewRequest("GET", "/updateuser/2", nil)
+  copyCookies(req3, res2)
+  r.ServeHTTP(res3, req3)
+
+  expected_updateuser := "<h1>Update User</h1>"
+  expected_roles := "let available_roles = {\"Guest\":0};"
+  expected_csrf := "name=\"_csrf\""
+
+  assert.Equal(t, http.StatusOK, res3.Code)
+  assert.True(t, strings.Contains(res3.Body.String(), expected_updateuser))
+  assert.True(t, strings.Contains(res3.Body.String(), expected_roles))
+  assert.True(t, strings.Contains(res3.Body.String(), expected_csrf))
+
+  csrf_token = getCSRFToken(res3)
+  assert.True(t, len(csrf_token) > 0)
+
+  /* Requests with session, the CSRF token, and correct POST form fields to update self */
+  res4 := httptest.NewRecorder()
+  data2 := url.Values{}
+  data2.Set("email", "foo2@bar.idv")
+  data2.Set("role", "Administrator")
+  data2.Set("_csrf", csrf_token)
+  req4, _ := http.NewRequest("POST", "/updateuser/2", strings.NewReader(data2.Encode()))
+  req4.Header.Set("Content-Type", "application/x-www-form-urlencoded")
   copyCookies(req4, res2)
   r.ServeHTTP(res4, req4)
 
-  assert.Equal(t, http.StatusBadRequest, res4.Code)
+  assert.Equal(t, http.StatusOK, res4.Code)
+  assert.Equal(t, "", res4.Body.String())
+
+  user2, err := utils.Get("foo2", hashSHA512("bar2"))
+  assert.Nil(t, err)
+  assert.Equal(t, "foo2", user2.Account)
+  assert.Equal(t, hashSHA512("bar2"), user2.Passwd)
+  assert.Equal(t, "foo2@bar.idv", user2.Email)
+  assert.Equal(t, database.Guest, user2.Role)
+
+  /* Request updateuser with GET method to update an administrator */
+  res5 := httptest.NewRecorder()
+  req5, _ := http.NewRequest("GET", "/updateuser/3", nil)
+  copyCookies(req5, res2)
+  r.ServeHTTP(res5, req5)
+
+  assert.Equal(t, http.StatusForbidden, res5.Code)
+  assert.Equal(t, "", res5.Body.String())
+
+  /* Requests with session, the CSRF token, and correct POST form fields to update an administrator */
+  res6 := httptest.NewRecorder()
+  req6, _ := http.NewRequest("POST", "/updateuser/3", strings.NewReader(data2.Encode()))
+  req6.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req6, res2)
+  r.ServeHTTP(res6, req6)
+
+  assert.Equal(t, http.StatusForbidden, res6.Code)
+  assert.Equal(t, "", res6.Body.String())
+
+  /* Request updateuser with GET method to update an unexisted user */
+  res7 := httptest.NewRecorder()
+  req7, _ := http.NewRequest("GET", "/updateuser/10", nil)
+  copyCookies(req7, res2)
+  r.ServeHTTP(res7, req7)
+
+  assert.Equal(t, http.StatusForbidden, res7.Code)
+  assert.Equal(t, "", res7.Body.String())
+
+  /* Requests with session, the CSRF token, and correct POST form fields to update an unexisted user */
+  res8 := httptest.NewRecorder()
+  req8, _ := http.NewRequest("POST", "/updateuser/10", strings.NewReader(data2.Encode()))
+  req6.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req8, res2)
+  r.ServeHTTP(res8, req8)
+
+  assert.Equal(t, http.StatusBadRequest, res8.Code)
+
+  /* Request updateuser with GET method to update a wrong user */
+  res9 := httptest.NewRecorder()
+  req9, _ := http.NewRequest("GET", "/updateuser/ABC10", nil)
+  copyCookies(req9, res2)
+  r.ServeHTTP(res9, req9)
+
+  assert.Equal(t, http.StatusNotFound, res9.Code)
+  assert.Equal(t, "", res9.Body.String())
+
+  /* Requests with session, the CSRF token, and correct POST form fields to update a wrong user */
+  res10 := httptest.NewRecorder()
+  req10, _ := http.NewRequest("POST", "/updateuser/ABC10", strings.NewReader(data2.Encode()))
+  req10.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req10, res2)
+  r.ServeHTTP(res10, req10)
+
+  assert.Equal(t, http.StatusNotFound, res10.Code)
+  assert.Equal(t, "", res10.Body.String())
+}
+
+func TestAdministratorUpdateUser(t *testing.T) {
+  r := setupRouter()
+  utils := database.UserUtils{DB: database.ConnectDB("")}
+
+  /* Have the session and the CSRF token for following POST request */
+  res1 := httptest.NewRecorder()
+  req1, _ := http.NewRequest("GET", "/login", nil)
+  r.ServeHTTP(res1, req1)
+
+  assert.Equal(t, http.StatusOK, res1.Code)
+  csrf_token := getCSRFToken(res1)
+  assert.True(t, len(csrf_token) > 0)
+
+  res2 := httptest.NewRecorder()
+  data1 := url.Values{}
+  data1.Set("account", "foo")
+  data1.Set("passwd", "bar")
+  data1.Set("_csrf", csrf_token)
+  req2, _ := http.NewRequest("POST", "/login", strings.NewReader(data1.Encode()))
+  req2.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req2, res1)
+  r.ServeHTTP(res2, req2)
+
+  assert.Equal(t, http.StatusFound, res2.Code)
+  assert.Equal(t, "/", res2.Header().Get("Location"))
+  assert.Equal(t, "", res2.Body.String())
+
+  /* Request updateuser with GET method to have session and CSRF token */
+  res3 := httptest.NewRecorder()
+  req3, _ := http.NewRequest("GET", "/updateuser/2", nil)
+  copyCookies(req3, res2)
+  r.ServeHTTP(res3, req3)
+
+  expected_updateuser := "<h1>Update User</h1>"
+  expected_roles := "let available_roles = {\"Administrator\":"
+  expected_csrf := "name=\"_csrf\""
+
+  assert.Equal(t, http.StatusOK, res3.Code)
+  assert.True(t, strings.Contains(res3.Body.String(), expected_updateuser))
+  assert.True(t, strings.Contains(res3.Body.String(), expected_roles))
+  assert.True(t, strings.Contains(res3.Body.String(), expected_csrf))
+
+  csrf_token = getCSRFToken(res3)
+  assert.True(t, len(csrf_token) > 0)
+
+  /* Requests with session, the CSRF token, and correct POST form fields to update a Guest */
+  res4 := httptest.NewRecorder()
+  data2 := url.Values{}
+  data2.Set("email", "foo2@bar.idvv")
+  data2.Set("role", "Administrator")
+  data2.Set("_csrf", csrf_token)
+  req4, _ := http.NewRequest("POST", "/updateuser/2", strings.NewReader(data2.Encode()))
+  req4.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req4, res2)
+  r.ServeHTTP(res4, req4)
+
+  assert.Equal(t, http.StatusOK, res4.Code)
+  assert.Equal(t, "", res4.Body.String())
+
+  user2, err := utils.Get("foo2", hashSHA512("bar2"))
+  assert.Nil(t, err)
+  assert.Equal(t, "foo2", user2.Account)
+  assert.Equal(t, hashSHA512("bar2"), user2.Passwd)
+  assert.Equal(t, "foo2@bar.idvv", user2.Email)
+  assert.Equal(t, database.Administrator, user2.Role)
+
+  /* Request updateuser with GET method to update an Administrator*/
+  res5 := httptest.NewRecorder()
+  req5, _ := http.NewRequest("GET", "/updateuser/2", nil)
+  copyCookies(req5, res2)
+  r.ServeHTTP(res5, req5)
+
+  assert.Equal(t, http.StatusOK, res5.Code)
+  assert.True(t, strings.Contains(res5.Body.String(), expected_updateuser))
+  assert.True(t, strings.Contains(res5.Body.String(), expected_roles))
+  assert.True(t, strings.Contains(res5.Body.String(), expected_csrf))
+
+  csrf_token = getCSRFToken(res5)
+  assert.True(t, len(csrf_token) > 0)
+
+  /* Requests with session, the CSRF token, and correct POST form fields to update an Administrator */
+  res6 := httptest.NewRecorder()
+  data3 := url.Values{}
+  data3.Set("email", "foo2@bar.idv")
+  data3.Set("role", "Guest")
+  data3.Set("_csrf", csrf_token)
+  req6, _ := http.NewRequest("POST", "/updateuser/2", strings.NewReader(data3.Encode()))
+  req6.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req6, res2)
+  r.ServeHTTP(res6, req6)
+
+  assert.Equal(t, http.StatusOK, res6.Code)
+  assert.Equal(t, "", res6.Body.String())
+
+  user3, err := utils.Get("foo2", hashSHA512("bar2"))
+  assert.Nil(t, err)
+  assert.Equal(t, "foo2", user3.Account)
+  assert.Equal(t, hashSHA512("bar2"), user3.Passwd)
+  assert.Equal(t, "foo2@bar.idv", user3.Email)
+  assert.Equal(t, database.Guest, user3.Role)
+
+  /* Request updateuser with GET method to update an unexisted user */
+  res7 := httptest.NewRecorder()
+  req7, _ := http.NewRequest("GET", "/updateuser/10", nil)
+  copyCookies(req7, res2)
+  r.ServeHTTP(res7, req7)
+
+  assert.Equal(t, http.StatusNotFound, res7.Code)
+  assert.Equal(t, "", res7.Body.String())
+
+  /* Requests with session, the CSRF token, and correct POST form fields to update an unexisted user */
+  res8 := httptest.NewRecorder()
+  req8, _ := http.NewRequest("POST", "/updateuser/10", strings.NewReader(data3.Encode()))
+  req6.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req8, res2)
+  r.ServeHTTP(res8, req8)
+
+  assert.Equal(t, http.StatusBadRequest, res8.Code)
+
+  /* Request updateuser with GET method to update a wrong user */
+  res9 := httptest.NewRecorder()
+  req9, _ := http.NewRequest("GET", "/updateuser/ABC10", nil)
+  copyCookies(req9, res2)
+  r.ServeHTTP(res9, req9)
+
+  assert.Equal(t, http.StatusNotFound, res9.Code)
+  assert.Equal(t, "", res9.Body.String())
+
+  /* Requests with session, the CSRF token, and correct POST form fields to update a wrong user */
+  res10 := httptest.NewRecorder()
+  req10, _ := http.NewRequest("POST", "/updateuser/ABC10", strings.NewReader(data2.Encode()))
+  req10.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req10, res2)
+  r.ServeHTTP(res10, req10)
+
+  assert.Equal(t, http.StatusNotFound, res10.Code)
+  assert.Equal(t, "", res10.Body.String())
 }

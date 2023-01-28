@@ -1,0 +1,51 @@
+<head>
+<script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+</head>
+<body>
+<h1>Update User</h1>
+<h2>Updating {{.tg_account}}</h2>
+<form id="updateuser" method="POST">
+Email:<input type="email" id="email" name="email" value="{{.tg_email}}" required><br>
+<div id="roles">
+Role:
+</div>
+<br>
+<input type="hidden" id="_csrf" name="_csrf" value="{{._csrf}}" />
+<input type="submit" value="Update">
+</form>
+<script>
+/* List new available roles options */
+let cur_role = {{.tg_role}};
+let available_roles = {{.roles}};
+let roles_node = document.getElementById("roles");
+
+for (const [key, value] of Object.entries(available_roles)) {
+  let role_input_node = document.createElement("input");
+  let role_txt_node = document.createTextNode(key);
+
+  role_input_node.setAttribute("type", "radio");
+  role_input_node.setAttribute("name", "role");
+  role_input_node.setAttribute("value", key);
+  if (value == cur_role)
+    role_input_node.setAttribute("checked", "");
+  roles_node.appendChild(role_input_node);
+  roles_node.appendChild(role_txt_node);
+}
+
+/* Attach a submit handler to the form */
+$("#updateuser").submit(function (event) {
+  /* Stop form from submitting normally */
+  event.preventDefault();
+
+  $.post("/updateuser/{{.tg_id}}", {
+    email: $("input[name='email']").val(),
+    role: $("input[name='role']:checked").val(),
+    _csrf: $("input[name='_csrf']").val(),
+  }).done(function () {
+    location.replace("/")
+  }).fail(function (data) {
+    alert(data);
+  });
+});
+</script>
+</body>

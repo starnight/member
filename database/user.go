@@ -44,6 +44,10 @@ func (utils *UserUtils) GetById(id uint) (User, error) {
   return user, res.Error
 }
 
+func (utils *UserUtils) Update(user *User) {
+  utils.DB.Save(user)
+}
+
 func (utils *UserUtils) Count() (int64, error) {
   var cnt int64 = 0
   res := utils.DB.Model(&User{}).Count(&cnt)

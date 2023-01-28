@@ -67,6 +67,28 @@ func TestGetUserById(t *testing.T) {
   assert.Equal(t, user.Role, role)
 }
 
+func TestUpdateUser(t *testing.T) {
+  utils := UserUtils{DB: ConnectDB(GetDBStr("test"))}
+  expected_id := uint(1)
+  expected_account := "foo"
+  expected_passwd := "bar"
+  expected_email := "foo@bar.idv2"
+  expected_role := Administrator
+
+  user, err := utils.GetById(expected_id)
+  assert.Nil(t, err)
+
+  user.Email = expected_email
+
+  utils.Update(&user)
+
+  assert.Equal(t, user.ID, expected_id)
+  assert.Equal(t, user.Account, expected_account)
+  assert.Equal(t, user.Passwd, expected_passwd)
+  assert.Equal(t, user.Email, expected_email)
+  assert.Equal(t, user.Role, expected_role)
+}
+
 func TestCountUser(t *testing.T) {
   utils := UserUtils{DB: ConnectDB(GetDBStr("test"))}
 

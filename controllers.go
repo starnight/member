@@ -2,6 +2,7 @@ package main
 
 import (
   "fmt"
+  "strconv"
   "time"
   "crypto/sha512"
   "encoding/hex"
@@ -169,6 +170,110 @@ func Login (c *gin.Context) {
   session.Save()
 
   c.Redirect(http.StatusFound, "/")
+}
+
+func UpdateUserHTML(c *gin.Context) {
+  tg_id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
+  if (err != nil) {
+    c.Status(http.StatusNotFound)
+    c.Abort()
+    return
+  }
+  tg_id := uint(tg_id64)
+
+  utils := database.UserUtils{DB: database.ConnectDB("")}
+  session := sessions.Default(c)
+  cur_id := session.Get("id").(uint)
+  cur_user, _ := utils.GetById(cur_id)
+
+  /* Only:
+   * - Userself can update self
+   * - Administrator can update others
+   */
+  if (tg_id != cur_id && cur_user.Role != database.Administrator) {
+    c.Status(http.StatusForbidden)
+    c.Abort()
+    return
+  }
+
+  tg_user, err2 := utils.GetById(tg_id)
+  if (err2 != nil) {
+    c.Status(http.StatusNotFound)
+    c.Abort()
+    return
+  }
+
+  roles := make(map[string]uint32)
+  roles["Guest"] = database.Guest
+  if (cur_user.Role == database.Administrator) {
+    roles["Administrator"] = database.Administrator
+  }
+
+  c.HTML(http.StatusOK, "updateuser.tmpl", gin.H{
+    "tg_id": tg_id,
+    "tg_account": tg_user.Account,
+    "tg_email": tg_user.Email,
+    "tg_role": tg_user.Role,
+    "roles": roles,
+    "_csrf": csrf.GetToken(c),
+  })
+}
+
+func UpdateUser(c *gin.Context) {
+  tg_id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
+  if (err != nil) {
+    c.Status(http.StatusNotFound)
+    c.Abort()
+    return
+  }
+  tg_id := uint(tg_id64)
+
+  utils := database.UserUtils{DB: database.ConnectDB("")}
+  session := sessions.Default(c)
+  cur_id := session.Get("id").(uint)
+  cur_user, _ := utils.GetById(cur_id)
+
+  /* Only:
+   * - Userself can update self
+   * - Administrator can update others
+   */
+  if (tg_id != cur_id && cur_user.Role != database.Administrator) {
+    c.Status(http.StatusForbidden)
+    c.Abort()
+    return
+  }
+
+  tg_user, err2 := utils.GetById(tg_id)
+  if (err2 != nil) {
+    c.Status(http.StatusNotFound)
+    c.Abort()
+    return
+  }
+
+  tg_email := c.PostForm("email")
+  tg_role := c.PostForm("role")
+
+  needupdate := false
+
+  if (tg_email != "") {
+    tg_user.Email = tg_email
+    needupdate = true
+  }
+
+  if (tg_role != "" && cur_user.Role == database.Administrator) {
+    switch tg_role {
+      case "Administrator":
+        tg_user.Role = database.Administrator
+	needupdate = true
+      case "Guest":
+        tg_user.Role = database.Guest
+	needupdate = true
+    }
+  }
+
+  if (needupdate) {
+    utils.Update(&tg_user)
+  }
 }
 
 func Showdate(c *gin.Context) {
