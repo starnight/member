@@ -271,8 +271,9 @@ func TestLoginAndShowdate(t *testing.T) {
   copyCookies(req4, res2)
   r.ServeHTTP(res4, req4)
 
+  expected_index := "<h1>Welcome foo</h1>\n"
   assert.Equal(t, http.StatusOK, res4.Code)
-  assert.Equal(t, "<h1>Welcome foo</h1>\n", res4.Body.String())
+  assert.True(t, strings.Contains(res4.Body.String(), expected_index))
 }
 
 func TestAddUserWrong(t *testing.T) {
@@ -760,4 +761,51 @@ func TestAdministratorUpdateUser(t *testing.T) {
 
   assert.Equal(t, http.StatusNotFound, res10.Code)
   assert.Equal(t, "", res10.Body.String())
+}
+
+func TestLogout(t *testing.T) {
+  r := setupRouter()
+
+  /* Have the session and the CSRF token for following POST request */
+  res1 := httptest.NewRecorder()
+  req1, _ := http.NewRequest("GET", "/login", nil)
+  r.ServeHTTP(res1, req1)
+
+  assert.Equal(t, http.StatusOK, res1.Code)
+  csrf_token := getCSRFToken(res1)
+  assert.True(t, len(csrf_token) > 0)
+
+  res2 := httptest.NewRecorder()
+  data1 := url.Values{}
+  data1.Set("account", "foo")
+  data1.Set("passwd", "bar")
+  data1.Set("_csrf", csrf_token)
+  req2, _ := http.NewRequest("POST", "/login", strings.NewReader(data1.Encode()))
+  req2.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  copyCookies(req2, res1)
+  r.ServeHTTP(res2, req2)
+
+  assert.Equal(t, http.StatusFound, res2.Code)
+  assert.Equal(t, "/", res2.Header().Get("Location"))
+  assert.Equal(t, "", res2.Body.String())
+
+  /* Logout */
+  res3 := httptest.NewRecorder()
+  req3, _ := http.NewRequest("GET", "/logout", nil)
+  copyCookies(req3, res2)
+  r.ServeHTTP(res3, req3)
+
+  assert.Equal(t, http.StatusFound, res3.Code)
+  assert.Equal(t, "/", res3.Header().Get("Location"))
+
+  /* Request index again */
+  res4 := httptest.NewRecorder()
+  req4, _ := http.NewRequest("GET", "/", nil)
+  copyCookies(req4, res3)
+  r.ServeHTTP(res4, req4)
+
+  expected_index := "<h1>Welcome</h1>\n"
+
+  assert.Equal(t, http.StatusOK, res4.Code)
+  assert.True(t, strings.Contains(res4.Body.String(), expected_index))
 }

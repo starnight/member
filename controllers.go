@@ -284,3 +284,11 @@ func Showdate(c *gin.Context) {
   res := fmt.Sprintf("Welcome %s %s", account, currentTime.String())
   c.String(http.StatusOK, res)
 }
+
+func Logout(c *gin.Context) {
+  session := sessions.Default(c)
+  session.Clear()
+  session.Options(sessions.Options{MaxAge: -1})
+  session.Save()
+  c.Redirect(http.StatusFound, "/")
+}
