@@ -25,10 +25,10 @@ func TestConnectDB(t *testing.T) {
   assert.Equal(t, db2, db1)
 }
 
-func TestCreateTables(t *testing.T) {
+func TestInitTables(t *testing.T) {
   db := ConnectDB(GetDBStr("test"))
 
   assert.NotNil(t, db)
 
-  CreateTables(db)
+  InitTables(db)
 }

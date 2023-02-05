@@ -32,7 +32,6 @@ func ConnectDB(name string) *gorm.DB {
   return _db
 }
 
-func CreateTables(db *gorm.DB) {
-  utils := UserUtils{DB: db}
-  utils.CreateUserTables()
+func InitTables(db *gorm.DB) {
+  InitUserTables(db)
 }

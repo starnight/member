@@ -18,7 +18,7 @@ func setupDB() {
   _, err := utils.Count()
 
   if (err != nil) {
-    database.CreateTables(db)
+    database.InitTables(db)
   }
 }
 

@@ -57,3 +57,8 @@ func (utils *UserUtils) Count() (int64, error) {
 func (utils *UserUtils) CreateUserTables() {
   utils.DB.AutoMigrate(&User{})
 }
+
+func InitUserTables(db *gorm.DB) {
+  utils := UserUtils{DB: db}
+  utils.CreateUserTables()
+}
