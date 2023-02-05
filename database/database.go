@@ -34,4 +34,5 @@ func ConnectDB(name string) *gorm.DB {
 
 func InitTables(db *gorm.DB) {
   InitUserTables(db)
+  InitGroupTables(db)
 }
