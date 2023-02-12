@@ -13,6 +13,9 @@ import (
   "github.com/starnight/member/database"
 )
 
+var user_utils = database.UserUtils{DB: database.ConnectDB("")}
+var group_utils = database.GroupUtils{DB: database.ConnectDB("")}
+
 func hashSHA512(text string) string {
   txtByte := []byte(text)
   sha512 := sha512.New()
@@ -24,13 +27,15 @@ func hashSHA512(text string) string {
   return hex.EncodeToString(hashedtxt)
 }
 
-func IsAuthorized(id uint, role uint32) bool {
-  utils := database.UserUtils{DB: database.ConnectDB("")}
-  cur_user, _ := utils.GetById(id)
+func IsAuthorized(id uint, group_name string) bool {
+  cur_user, _ := user_utils.GetById(id)
   res := false
 
-  if (cur_user.Role == role) {
-    res = true
+  for _, group := range cur_user.Groups {
+    if (group.Name == group_name) {
+      res = true
+      break
+    }
   }
 
   return res
@@ -41,8 +46,7 @@ func index_guest(c *gin.Context) {
 }
 
 func Index(c *gin.Context) {
-  utils := database.UserUtils{DB: database.ConnectDB("")}
-  cnt, _ := utils.Count()
+  cnt, _ := user_utils.Count()
   if (cnt == 0) {
     c.Redirect(http.StatusFound, "/add1stuser")
     return
@@ -73,7 +77,7 @@ func AddUserHTML(c *gin.Context) {
     /* Only Administrator can add users.  Others are forbidden */
     session := sessions.Default(c)
     id := session.Get("id").(uint)
-    if (!IsAuthorized(id, database.Administrator)) {
+    if (!IsAuthorized(id, "Administrator")) {
       c.Status(http.StatusForbidden)
       c.Abort()
       return
@@ -90,16 +94,16 @@ func AddUser(c *gin.Context) {
   account := c.PostForm("account")
   passwd := c.PostForm("passwd")
   email := c.PostForm("email")
-  role := database.Guest
+  var group database.Group
 
   if (c.Request.URL.Path == "/add1stuser") {
     /* The first user should be an Administrator for following management */
-    role = database.Administrator
+    group, _ = group_utils.Get("Administrator")
   } else {
     /* Only Administrator can add users.  Others are forbidden */
     session := sessions.Default(c)
     id := session.Get("id").(uint)
-    if (!IsAuthorized(id, database.Administrator)) {
+    if (!IsAuthorized(id, "Administrator")) {
       c.Status(http.StatusForbidden)
       c.Abort()
       return
@@ -107,9 +111,13 @@ func AddUser(c *gin.Context) {
 
     switch c.PostForm("role") {
       case "Administrator":
-        role = database.Administrator
+        group, _ = group_utils.Get("Administrator")
+      default:
+        group, _ = group_utils.Get("Guest")
     }
   }
+
+  groups := []database.Group{group}
 
   if (account == "" || passwd == "" || email =="") {
     c.String(http.StatusBadRequest, "Wrong account, password or email address")
@@ -117,15 +125,13 @@ func AddUser(c *gin.Context) {
     return
   }
 
-  utils := database.UserUtils{DB: database.ConnectDB("")}
-  utils.Add(account, hashSHA512(passwd), email, role)
+  user_utils.Add(account, hashSHA512(passwd), email, groups)
 
   c.Status(http.StatusOK)
 }
 
 func Add1stUserHTML(c *gin.Context) {
-  utils := database.UserUtils{DB: database.ConnectDB("")}
-  cnt, _ := utils.Count()
+  cnt, _ := user_utils.Count()
   if (cnt != 0) {
     c.Redirect(http.StatusFound, "/")
     return
@@ -135,8 +141,7 @@ func Add1stUserHTML(c *gin.Context) {
 }
 
 func Add1stUser(c *gin.Context) {
-  utils := database.UserUtils{DB: database.ConnectDB("")}
-  cnt, _ := utils.Count()
+  cnt, _ := user_utils.Count()
   if (cnt != 0) {
     c.Status(http.StatusForbidden)
     return
@@ -155,8 +160,7 @@ func Login (c *gin.Context) {
   account := c.PostForm("account")
   passwd := c.PostForm("passwd")
 
-  utils := database.UserUtils{DB: database.ConnectDB("")}
-  user, err := utils.Get(account, hashSHA512(passwd))
+  user, err := user_utils.Get(account, hashSHA512(passwd))
 
   if (err != nil) {
     c.String(http.StatusForbidden, "Wrong account or password")
@@ -181,39 +185,39 @@ func UpdateUserHTML(c *gin.Context) {
   }
   tg_id := uint(tg_id64)
 
-  utils := database.UserUtils{DB: database.ConnectDB("")}
   session := sessions.Default(c)
   cur_id := session.Get("id").(uint)
-  cur_user, _ := utils.GetById(cur_id)
 
   /* Only:
    * - Userself can update self
    * - Administrator can update others
    */
-  if (tg_id != cur_id && cur_user.Role != database.Administrator) {
+  if (tg_id != cur_id && !IsAuthorized(cur_id, "Administrator")) {
     c.Status(http.StatusForbidden)
     c.Abort()
     return
   }
 
-  tg_user, err2 := utils.GetById(tg_id)
+  tg_user, err2 := user_utils.GetById(tg_id)
   if (err2 != nil) {
     c.Status(http.StatusNotFound)
     c.Abort()
     return
   }
 
-  roles := make(map[string]uint32)
-  roles["Guest"] = database.Guest
-  if (cur_user.Role == database.Administrator) {
-    roles["Administrator"] = database.Administrator
+  roles := make(map[string]uint)
+  gst_grp, _ := group_utils.Get("Guest")
+  roles["Guest"] = gst_grp.ID
+  if (IsAuthorized(cur_id, "Administrator")) {
+    adm_grp, _ := group_utils.Get("Administrator")
+    roles["Administrator"] = adm_grp.ID
   }
 
   c.HTML(http.StatusOK, "updateuser.tmpl", gin.H{
     "tg_id": tg_id,
     "tg_account": tg_user.Account,
     "tg_email": tg_user.Email,
-    "tg_role": tg_user.Role,
+    "tg_role": tg_user.Groups[0].ID,
     "roles": roles,
     "_csrf": csrf.GetToken(c),
   })
@@ -228,22 +232,20 @@ func UpdateUser(c *gin.Context) {
   }
   tg_id := uint(tg_id64)
 
-  utils := database.UserUtils{DB: database.ConnectDB("")}
   session := sessions.Default(c)
   cur_id := session.Get("id").(uint)
-  cur_user, _ := utils.GetById(cur_id)
 
   /* Only:
    * - Userself can update self
    * - Administrator can update others
    */
-  if (tg_id != cur_id && cur_user.Role != database.Administrator) {
+  if (tg_id != cur_id && !IsAuthorized(cur_id, "Administrator")) {
     c.Status(http.StatusForbidden)
     c.Abort()
     return
   }
 
-  tg_user, err2 := utils.GetById(tg_id)
+  tg_user, err2 := user_utils.GetById(tg_id)
   if (err2 != nil) {
     c.Status(http.StatusNotFound)
     c.Abort()
@@ -260,19 +262,21 @@ func UpdateUser(c *gin.Context) {
     needupdate = true
   }
 
-  if (tg_role != "" && cur_user.Role == database.Administrator) {
+  if (tg_role != "" && IsAuthorized(cur_id, "Administrator")) {
     switch tg_role {
       case "Administrator":
-        tg_user.Role = database.Administrator
+        grp, _ := group_utils.Get("Administrator")
+        tg_user.Groups = []database.Group{grp}
 	needupdate = true
       case "Guest":
-        tg_user.Role = database.Guest
+        grp, _ := group_utils.Get("Guest")
+        tg_user.Groups = []database.Group{grp}
 	needupdate = true
     }
   }
 
   if (needupdate) {
-    utils.Update(&tg_user)
+    user_utils.Update(&tg_user)
   }
 }
 

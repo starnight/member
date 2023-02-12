@@ -4,29 +4,24 @@ import (
   "gorm.io/gorm"
 )
 
-const (
-  Guest uint32 = 0
-  Administrator = ^uint32(0)
-)
-
 type User struct {
   gorm.Model
   Account string `gorm:"unique;not null"`
   Passwd string `gorm:"not null"`
   Email string `gorm:"unique;not null"`
-  Role uint32 `gorm:"default:0;not null"`
+  Groups []Group `gorm:"many2many:user_groups;"`
 }
 
 type UserUtils struct {
   DB *gorm.DB
 }
 
-func (utils *UserUtils) Add(account string, passwd string, email string, role uint32) (User, error) {
+func (utils *UserUtils) Add(account string, passwd string, email string, groups []Group) (User, error) {
   user := User{
     Account: account,
     Passwd: passwd,
     Email: email,
-    Role: uint32(role),
+    Groups: groups,
   }
   res := utils.DB.Create(&user)
   return user, res.Error
@@ -34,18 +29,19 @@ func (utils *UserUtils) Add(account string, passwd string, email string, role ui
 
 func (utils *UserUtils) Get(account string, passwd string) (User, error) {
   var user User
-  res := utils.DB.Where("Account = ? AND passwd = ?", account, passwd).First(&user)
+  res := utils.DB.Where("Account = ? AND passwd = ?", account, passwd).Preload("Groups").First(&user)
   return user, res.Error
 }
 
 func (utils *UserUtils) GetById(id uint) (User, error) {
   var user User
-  res := utils.DB.Where("ID = ?", id).First(&user)
+  res := utils.DB.Where("ID = ?", id).Preload("Groups").First(&user)
   return user, res.Error
 }
 
 func (utils *UserUtils) Update(user *User) {
   utils.DB.Save(user)
+  utils.DB.Model(user).Association("Groups").Replace(user.Groups)
 }
 
 func (utils *UserUtils) Count() (int64, error) {

@@ -416,7 +416,7 @@ func TestAddUserSuccess(t *testing.T) {
   assert.Equal(t, "foo2", user2.Account)
   assert.Equal(t, hashSHA512("bar2"), user2.Passwd)
   assert.Equal(t, "foo2@bar2.idv", user2.Email)
-  assert.Equal(t, database.Guest, user2.Role)
+  assert.Equal(t, "Guest", user2.Groups[0].Name)
 
   /* Requests with session, the CSRF token, and correct POST form fields to add another administrator */
   res5 := httptest.NewRecorder()
@@ -438,7 +438,7 @@ func TestAddUserSuccess(t *testing.T) {
   assert.Equal(t, "foo3", user3.Account)
   assert.Equal(t, hashSHA512("bar3"), user3.Passwd)
   assert.Equal(t, "foo3@bar3.idv", user3.Email)
-  assert.Equal(t, database.Administrator, user3.Role)
+  assert.Equal(t, "Administrator", user3.Groups[0].Name)
 }
 
 func TestGuestAddUser(t *testing.T) {
@@ -535,7 +535,7 @@ func TestGuestUpdateUser(t *testing.T) {
   r.ServeHTTP(res3, req3)
 
   expected_updateuser := "<h1>Update User</h1>"
-  expected_roles := "let available_roles = {\"Guest\":0};"
+  expected_roles := "let available_roles = {\"Guest\":1};"
   expected_csrf := "name=\"_csrf\""
 
   assert.Equal(t, http.StatusOK, res3.Code)
@@ -565,7 +565,7 @@ func TestGuestUpdateUser(t *testing.T) {
   assert.Equal(t, "foo2", user2.Account)
   assert.Equal(t, hashSHA512("bar2"), user2.Passwd)
   assert.Equal(t, "foo2@bar.idv", user2.Email)
-  assert.Equal(t, database.Guest, user2.Role)
+  assert.Equal(t, "Guest", user2.Groups[0].Name)
 
   /* Request updateuser with GET method to update an administrator */
   res5 := httptest.NewRecorder()
@@ -688,7 +688,7 @@ func TestAdministratorUpdateUser(t *testing.T) {
   assert.Equal(t, "foo2", user2.Account)
   assert.Equal(t, hashSHA512("bar2"), user2.Passwd)
   assert.Equal(t, "foo2@bar.idvv", user2.Email)
-  assert.Equal(t, database.Administrator, user2.Role)
+  assert.Equal(t, "Administrator", user2.Groups[0].Name)
 
   /* Request updateuser with GET method to update an Administrator*/
   res5 := httptest.NewRecorder()
@@ -723,7 +723,7 @@ func TestAdministratorUpdateUser(t *testing.T) {
   assert.Equal(t, "foo2", user3.Account)
   assert.Equal(t, hashSHA512("bar2"), user3.Passwd)
   assert.Equal(t, "foo2@bar.idv", user3.Email)
-  assert.Equal(t, database.Guest, user3.Role)
+  assert.Equal(t, "Guest", user3.Groups[0].Name)
 
   /* Request updateuser with GET method to update an unexisted user */
   res7 := httptest.NewRecorder()

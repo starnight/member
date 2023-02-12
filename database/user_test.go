@@ -5,96 +5,92 @@ import (
   "github.com/stretchr/testify/assert"
 )
 
+var user_utils = UserUtils{DB: ConnectDB(GetDBStr("test"))}
+var group_utils = GroupUtils{DB: ConnectDB(GetDBStr("test"))}
+
 func TestAddUser(t *testing.T) {
-  utils := UserUtils{DB: ConnectDB(GetDBStr("test"))}
   account := "foo"
   passwd := "bar"
   email := "foo@bar.idv"
-  role := Administrator
+  group, _ := group_utils.Get("Administrator")
+  groups := []Group{group}
 
-  user, err := utils.Add(account, passwd, email, role)
+  user, err := user_utils.Add(account, passwd, email, groups)
 
   assert.Nil(t, err)
   assert.Equal(t, user.Account, account)
   assert.Equal(t, user.Passwd, passwd)
   assert.Equal(t, user.Email, email)
-  assert.Equal(t, user.Role, role)
-
+  assert.Equal(t, user.Groups[0], group)
 }
 
 func TestGetUserSuccess(t *testing.T) {
-  utils := UserUtils{DB: ConnectDB(GetDBStr("test"))}
   account := "foo"
   passwd := "bar"
   email := "foo@bar.idv"
-  role := Administrator
+  group, _ := group_utils.Get("Administrator")
 
-  user, err := utils.Get(account, passwd)
+  user, err := user_utils.Get(account, passwd)
 
   assert.Nil(t, err)
   assert.Equal(t, user.Account, account)
   assert.Equal(t, user.Passwd, passwd)
   assert.Equal(t, user.Email, email)
-  assert.Equal(t, user.Role, role)
+  assert.Equal(t, user.Groups[0], group)
 }
 
 func TestGetUserNone(t *testing.T) {
-  utils := UserUtils{DB: ConnectDB(GetDBStr("test"))}
   account := "foo1"
   passwd := "bar"
 
-  _, err := utils.Get(account, passwd)
+  _, err := user_utils.Get(account, passwd)
 
   assert.NotNil(t, err)
 }
 
 func TestGetUserById(t *testing.T) {
-  utils := UserUtils{DB: ConnectDB(GetDBStr("test"))}
   account := "foo"
   passwd := "bar"
   email := "foo@bar.idv"
-  role := Administrator
+  group, _ := group_utils.Get("Administrator")
 
-  user, err := utils.Get(account, passwd)
+  user, err := user_utils.Get(account, passwd)
 
   assert.Nil(t, err)
 
-  user, err = utils.GetById(user.ID)
+  user, err = user_utils.GetById(user.ID)
   assert.Nil(t, err)
   assert.Equal(t, user.Account, account)
   assert.Equal(t, user.Passwd, passwd)
   assert.Equal(t, user.Email, email)
-  assert.Equal(t, user.Role, role)
+  assert.Equal(t, user.Groups[0], group)
 }
 
 func TestUpdateUser(t *testing.T) {
-  utils := UserUtils{DB: ConnectDB(GetDBStr("test"))}
   expected_id := uint(1)
   expected_account := "foo"
   expected_passwd := "bar"
   expected_email := "foo@bar.idv2"
-  expected_role := Administrator
+  group, _ := group_utils.Get("Administrator")
 
-  user, err := utils.GetById(expected_id)
+  user, err := user_utils.GetById(expected_id)
   assert.Nil(t, err)
 
   user.Email = expected_email
 
-  utils.Update(&user)
+  user_utils.Update(&user)
 
   assert.Equal(t, user.ID, expected_id)
   assert.Equal(t, user.Account, expected_account)
   assert.Equal(t, user.Passwd, expected_passwd)
   assert.Equal(t, user.Email, expected_email)
-  assert.Equal(t, user.Role, expected_role)
+  assert.Equal(t, user.Groups[0], group)
 }
 
 func TestCountUser(t *testing.T) {
-  utils := UserUtils{DB: ConnectDB(GetDBStr("test"))}
-
   var expected_cnt int64 = 1
 
-  cnt, err := utils.Count()
+  cnt, err := user_utils.Count()
 
   assert.Nil(t, err)
   assert.Equal(t, cnt, expected_cnt)
