@@ -33,7 +33,7 @@ func copyCookies(req *http.Request, res *httptest.ResponseRecorder) {
   req.Header.Set("Cookie", strings.Join(res.Header().Values("Set-Cookie"), "; "))
 }
 
-func TestAuthRequired(t *testing.T) {
+func TestAuthenticationRequired(t *testing.T) {
   r := gin.Default()
   store := cookie.NewStore([]byte("secret"))
   r.Use(sessions.Sessions("sessionid", store))
@@ -42,7 +42,7 @@ func TestAuthRequired(t *testing.T) {
   PublicRoutes(public)
 
   private := r.Group("/")
-  private.Use(AuthRequired)
+  private.Use(AuthenticationRequired)
   PrivateRoutes(private)
 
   /* Must get forbidden, because has not login */

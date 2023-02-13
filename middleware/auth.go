@@ -6,7 +6,7 @@ import (
   "github.com/gin-contrib/sessions"
 )
 
-func AuthRequired(c *gin.Context) {
+func AuthenticationRequired(c *gin.Context) {
   session := sessions.Default(c)
 
   account := session.Get("account")

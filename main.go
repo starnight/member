@@ -41,7 +41,7 @@ func setupRouter() *gin.Engine {
   PublicRoutes(public)
 
   private := r.Group("/")
-  private.Use(middleware.AuthRequired)
+  private.Use(middleware.AuthenticationRequired)
   PrivateRoutes(private)
 
   return r
