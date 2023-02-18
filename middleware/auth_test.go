@@ -16,6 +16,7 @@ func PublicRoutes (g *gin.RouterGroup) {
   g.POST("/login", func (c *gin.Context) {
     session := sessions.Default(c)
     session.Set("account", "foo")
+    session.Set("id", 1)
     session.Save()
     c.Status(http.StatusOK)
   })

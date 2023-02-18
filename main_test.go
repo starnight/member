@@ -420,12 +420,13 @@ func TestAddUserSuccess(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields to add another administrator */
   res5 := httptest.NewRecorder()
-  data2.Set("account", "foo3")
-  data2.Set("passwd", "bar3")
-  data2.Set("email", "foo3@bar3.idv")
-  data2.Set("role", "Administrator")
-  data2.Set("_csrf", csrf_token)
-  req5, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data2.Encode()))
+  data3 := url.Values{}
+  data3.Set("account", "foo3")
+  data3.Set("passwd", "bar3")
+  data3.Set("email", "foo3@bar3.idv")
+  data3.Set("role", "Administrator")
+  data3.Set("_csrf", csrf_token)
+  req5, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data3.Encode()))
   req5.Header.Set("Content-Type", "application/x-www-form-urlencoded")
   copyCookies(req5, res2)
   r.ServeHTTP(res5, req5)

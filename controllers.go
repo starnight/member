@@ -11,6 +11,7 @@ import (
   "github.com/gin-contrib/sessions"
   "github.com/utrack/gin-csrf"
   "github.com/starnight/member/database"
+  "github.com/starnight/member/middleware"
 )
 
 var user_utils = database.UserUtils{DB: database.ConnectDB("")}
@@ -28,17 +29,9 @@ func hashSHA512(text string) string {
 }
 
 func IsAuthorized(id uint, group_name string) bool {
-  cur_user, _ := user_utils.GetById(id)
-  res := false
+  group_names := []string{group_name}
 
-  for _, group := range cur_user.Groups {
-    if (group.Name == group_name) {
-      res = true
-      break
-    }
-  }
-
-  return res
+  return middleware.IsInGroups(id, group_names)
 }
 
 func index_guest(c *gin.Context) {
@@ -73,15 +66,6 @@ func AddUserHTML(c *gin.Context) {
 
   if (c.Request.URL.Path == "/add1stuser") {
     add1stuser = true
-  } else {
-    /* Only Administrator can add users.  Others are forbidden */
-    session := sessions.Default(c)
-    id := session.Get("id").(uint)
-    if (!IsAuthorized(id, "Administrator")) {
-      c.Status(http.StatusForbidden)
-      c.Abort()
-      return
-    }
   }
 
   c.HTML(http.StatusOK, "adduser.tmpl", gin.H{
@@ -100,15 +84,6 @@ func AddUser(c *gin.Context) {
     /* The first user should be an Administrator for following management */
     group, _ = group_utils.Get("Administrator")
   } else {
-    /* Only Administrator can add users.  Others are forbidden */
-    session := sessions.Default(c)
-    id := session.Get("id").(uint)
-    if (!IsAuthorized(id, "Administrator")) {
-      c.Status(http.StatusForbidden)
-      c.Abort()
-      return
-    }
-
     switch c.PostForm("role") {
       case "Administrator":
         group, _ = group_utils.Get("Administrator")
