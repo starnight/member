@@ -21,22 +21,8 @@ func AuthenticationRequired(c *gin.Context) {
   c.Next()
 }
 
-func IsInGroups(id uint, group_names []string) bool {
-  user_utils := database.UserUtils{DB: database.ConnectDB("")}
-  user, _ := user_utils.GetById(id)
-
-  for _, user_group := range user.Groups {
-    for _, group_name := range group_names {
-      if (user_group.Name == group_name) {
-        return true
-      }
-    }
-  }
-
-  return false
-}
-
 func AuthorizationRequired(c *gin.Context) {
+  user_utils := database.UserUtils{DB: database.ConnectDB("")}
   session := sessions.Default(c)
   id := session.Get("id").(uint)
 
@@ -46,7 +32,7 @@ func AuthorizationRequired(c *gin.Context) {
 
   for uri, grps := range uri_grps {
     if (strings.HasPrefix(c.Request.URL.Path, uri)) {
-      if (!IsInGroups(id, grps)) {
+      if (!user_utils.IsInGroups(id, grps)) {
         c.Status(http.StatusForbidden)
         c.Abort()
         return

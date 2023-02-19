@@ -11,7 +11,6 @@ import (
   "github.com/gin-contrib/sessions"
   "github.com/utrack/gin-csrf"
   "github.com/starnight/member/database"
-  "github.com/starnight/member/middleware"
 )
 
 var user_utils = database.UserUtils{DB: database.ConnectDB("")}
@@ -31,7 +30,7 @@ func hashSHA512(text string) string {
 func IsAuthorized(id uint, group_name string) bool {
   group_names := []string{group_name}
 
-  return middleware.IsInGroups(id, group_names)
+  return user_utils.IsInGroups(id, group_names)
 }
 
 func index_guest(c *gin.Context) {

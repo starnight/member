@@ -71,12 +71,14 @@ func TestUpdateUser(t *testing.T) {
   expected_account := "foo"
   expected_passwd := "bar"
   expected_email := "foo@bar.idv2"
-  group, _ := group_utils.Get("Administrator")
+  group0, _ := group_utils.Get("Guest")
+  group1, _ := group_utils.Get("Administrator")
 
   user, err := user_utils.GetById(expected_id)
   assert.Nil(t, err)
 
   user.Email = expected_email
+  user.Groups = []Group{group0, group1}
 
   user_utils.Update(&user)
 
@@ -84,7 +86,8 @@ func TestUpdateUser(t *testing.T) {
   assert.Equal(t, user.Account, expected_account)
   assert.Equal(t, user.Passwd, expected_passwd)
   assert.Equal(t, user.Email, expected_email)
-  assert.Equal(t, user.Groups[0], group)
+  assert.Equal(t, user.Groups[0], group0)
+  assert.Equal(t, user.Groups[1], group1)
 }
 
 func TestCountUser(t *testing.T) {
@@ -94,4 +97,16 @@ func TestCountUser(t *testing.T) {
 
   assert.Nil(t, err)
   assert.Equal(t, cnt, expected_cnt)
+}
+
+func TestIsInGroups(t *testing.T) {
+  id := uint(1)
+  in_group_names := []string{"Guest", "Administrator"}
+  not_group_names := []string{"HaHa", "Point"}
+
+  res1 := user_utils.IsInGroups(id, in_group_names)
+  res2 := user_utils.IsInGroups(id, not_group_names)
+
+  assert.Equal(t, true, res1)
+  assert.Equal(t, false, res2)
 }
