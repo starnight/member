@@ -12,6 +12,10 @@ type User struct {
   Groups []Group `gorm:"many2many:user_groups;"` // Will have "user_groups" table (user_id, group_id)
 }
 
+type IUserUtils interface {
+  IsInGroups(id uint, group_names []string) bool
+}
+
 type UserUtils struct {
   DB *gorm.DB
 }

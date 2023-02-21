@@ -21,8 +21,7 @@ func AuthenticationRequired(c *gin.Context) {
   c.Next()
 }
 
-func AuthorizationRequired(c *gin.Context) {
-  user_utils := database.UserUtils{DB: database.ConnectDB("")}
+func authorizationCheck(c *gin.Context, user_utils database.IUserUtils) {
   session := sessions.Default(c)
   id := session.Get("id").(uint)
 
@@ -40,4 +39,9 @@ func AuthorizationRequired(c *gin.Context) {
       break
     }
   }
+}
+
+func AuthorizationRequired(c *gin.Context) {
+  user_utils := database.UserUtils{DB: database.ConnectDB("")}
+  authorizationCheck(c, &user_utils)
 }
