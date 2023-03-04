@@ -32,7 +32,7 @@ It listens on port 8080.
 
 4. Input the user's account and password which are added by add first user process.  Then, it goes to the root page with welcome **user**
    
-   ![](https://i.imgur.com/AQvWxfX.png)
+   ![](https://i.imgur.com/YmPST3A.png)
 
 ## Access the web server with cURL
 
@@ -68,85 +68,64 @@ $ curl -v http://localhost:8080/login
 * Connected to localhost (127.0.0.1) port 8080 (#0)
 > GET /login HTTP/1.1
 > Host: localhost:8080
-> User-Agent: curl/7.87.0
+> User-Agent: curl/7.88.1
 > Accept: */*
 > 
-* Mark bundle as not supporting multiuse
 < HTTP/1.1 200 OK
 < Content-Type: text/html; charset=utf-8
-< Set-Cookie: sessionid=MTY3Mzc5Njg5MHxEdi1CQkFFQ180SUFBUkFCRUFBQU12LUNBQUVHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJBNFRUSnhUMU5ETjAwMmJWaG9RbGRQfA1Bkeu4H72DSdw8d_AWcn-FH5b0kFUZV2bhrj5V3lIK; Path=/; Expires=Tue, 14 Feb 2023 15:34:50 GMT; Max-Age=2592000
-< Date: Sun, 15 Jan 2023 15:34:50 GMT
-< Content-Length: 372
+< Set-Cookie: sessionid=MTY3NzkyMjQ0MXxEdi1CQkFFQ180SUFBUkFCRUFBQU12LUNBQUVHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJCUlNIUldhMlExUkZoRVkzbDBNR2RIfFq4ww0eYO5LqScjYzZVM7Zv4leqJdZFWdUkY9nUCzFO; Path=/; Expires=Mon, 03 Apr 2023 09:34:01 GMT; Max-Age=2592000
+< Date: Sat, 04 Mar 2023 09:34:01 GMT
+< Content-Length: 376
 < 
 <body>
 <h1>Login</h1>
 <form method="POST" action="/login">
 <label for="account">Account:</label><input type="text" id="account" name="account"><br>
-<label for="passwd">Password:</label><input type="text" id="passwd" name="passwd"><br>
-<input type="hidden" id="_csrf" name="_csrf" value="1zj99KOspTymLCGJryFx0MTUIkI=" />
+<label for="passwd">Password:</label><input type="password" id="passwd" name="passwd"><br>
+<input type="hidden" id="_csrf" name="_csrf" value="DlSWY_M7MDnfR1mx6oi30Kb7Qok=" />
 <input type="submit" value="Login">
 </form>
 </body>
 * Connection #0 to host localhost left intact
 
-$ curl -v -X POST -F "account=foo" -F "passwd=bar" -F "_csrf=1zj99KOspTymLCGJryFx0MTUIkI=" --cookie "sessionid=MTY3Mzc5Njg5MHxEdi1CQkFFQ180SUFBUkFCRUFBQU12LUNBQUVHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJBNFRUSnhUMU5ETjAwMmJWaG9RbGRQfA1Bkeu4H72DSdw8d_AWcn-FH5b0kFUZV2bhrj5V3lIK" http://localhost:8080/login
+$ curl -v -X POST -F "account=foo" -F "passwd=bar" -F "_csrf=DlSWY_M7MDnfR1mx6oi30Kb7Qok=" --cookie "sessionid=MTY3NzkyMjQ0MXxEdi1CQkFFQ180SUFBUkFCRUFBQU12LUNBQUVHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJCUlNIUldhMlExUkZoRVkzbDBNR2RIfFq4ww0eYO5LqScjYzZVM7Zv4leqJdZFWdUkY9nUCzFO" http://localhost:8080/login
 Note: Unnecessary use of -X or --request, POST is already inferred.
 *   Trying 127.0.0.1:8080...
 * Connected to localhost (127.0.0.1) port 8080 (#0)
 > POST /login HTTP/1.1
 > Host: localhost:8080
-> User-Agent: curl/7.87.0
+> User-Agent: curl/7.88.1
 > Accept: */*
-> Cookie: sessionid=MTY3Mzc5Njg5MHxEdi1CQkFFQ180SUFBUkFCRUFBQU12LUNBQUVHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJBNFRUSnhUMU5ETjAwMmJWaG9RbGRQfA1Bkeu4H72DSdw8d_AWcn-FH5b0kFUZV2bhrj5V3lIK
+> Cookie: sessionid=MTY3NzkyMjQ0MXxEdi1CQkFFQ180SUFBUkFCRUFBQU12LUNBQUVHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJCUlNIUldhMlExUkZoRVkzbDBNR2RIfFq4ww0eYO5LqScjYzZVM7Zv4leqJdZFWdUkY9nUCzFO
 > Content-Length: 365
-> Content-Type: multipart/form-data; boundary=------------------------c89738e74087c033
+> Content-Type: multipart/form-data; boundary=------------------------2957a72a8356eb43
 > 
 * We are completely uploaded and fine
-* Mark bundle as not supporting multiuse
 < HTTP/1.1 302 Found
 < Location: /
-< Set-Cookie: sessionid=MTY3Mzc5NzA1MnxEdi1CQkFFQ180SUFBUkFCRUFBQVV2LUNBQUlHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJBNFRUSnhUMU5ETjAwMmJWaG9RbGRQQm5OMGNtbHVad3dKQUFkaFkyTnZkVzUwQm5OMGNtbHVad3dGQUFObWIyOD18rkB58Nha-bX9l5CIMRCqHIM1nu4muX3SVs2Bvq2NZIw=; Path=/; Expires=Tue, 14 Feb 2023 15:37:32 GMT; Max-Age=2592000
-< Date: Sun, 15 Jan 2023 15:37:32 GMT
+< Set-Cookie: sessionid=MTY3NzkyMjUwN3xEdi1CQkFFQ180SUFBUkFCRUFBQWFQLUNBQU1HYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJCUlNIUldhMlExUkZoRVkzbDBNR2RIQm5OMGNtbHVad3dFQUFKcFpBUjFhVzUwQmdJQUFRWnpkSEpwYm1jTUNRQUhZV05qYjNWdWRBWnpkSEpwYm1jTUJRQURabTl2fLpHz8lq9Ue3A5TzMLYyPhs0vqvRKxp4AJbYM7aUi8Wx; Path=/; Expires=Mon, 03 Apr 2023 09:35:07 GMT; Max-Age=2592000
+< Date: Sat, 04 Mar 2023 09:35:07 GMT
 < Content-Length: 0
 < 
 * Connection #0 to host localhost left intact
 
-$ curl -v --cookie "sessionid=MTY3Mzc5NzA1MnxEdi1CQkFFQ180SUFBUkFCRUFBQVV2LUNBQUlHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJBNFRUSnhUMU5ETjAwMmJWaG9RbGRQQm5OMGNtbHVad3dKQUFkaFkyTnZkVzUwQm5OMGNtbHVad3dGQUFObWIyOD18rkB58Nha-bX9l5CIMRCqHIM1nu4muX3SVs2Bvq2NZIw=" http://localhost:8080/
+$ curl -v --cookie "sessionid=MTY3NzkyMjUwN3xEdi1CQkFFQ180SUFBUkFCRUFBQWFQLUNBQU1HYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJCUlNIUldhMlExUkZoRVkzbDBNR2RIQm5OMGNtbHVad3dFQUFKcFpBUjFhVzUwQmdJQUFRWnpkSEpwYm1jTUNRQUhZV05qYjNWdWRBWnpkSEpwYm1jTUJRQURabTl2fLpHz8lq9Ue3A5TzMLYyPhs0vqvRKxp4AJbYM7aUi8Wx" http://localhost:8080/
 *   Trying 127.0.0.1:8080...
 * Connected to localhost (127.0.0.1) port 8080 (#0)
 > GET / HTTP/1.1
 > Host: localhost:8080
-> User-Agent: curl/7.87.0
+> User-Agent: curl/7.88.1
 > Accept: */*
-> Cookie: sessionid=MTY3Mzc5NzA1MnxEdi1CQkFFQ180SUFBUkFCRUFBQVV2LUNBQUlHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJBNFRUSnhUMU5ETjAwMmJWaG9RbGRQQm5OMGNtbHVad3dKQUFkaFkyTnZkVzUwQm5OMGNtbHVad3dGQUFObWIyOD18rkB58Nha-bX9l5CIMRCqHIM1nu4muX3SVs2Bvq2NZIw=
+> Cookie: sessionid=MTY3NzkyMjUwN3xEdi1CQkFFQ180SUFBUkFCRUFBQWFQLUNBQU1HYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJCUlNIUldhMlExUkZoRVkzbDBNR2RIQm5OMGNtbHVad3dFQUFKcFpBUjFhVzUwQmdJQUFRWnpkSEpwYm1jTUNRQUhZV05qYjNWdWRBWnpkSEpwYm1jTUJRQURabTl2fLpHz8lq9Ue3A5TzMLYyPhs0vqvRKxp4AJbYM7aUi8Wx
 > 
-* Mark bundle as not supporting multiuse
 < HTTP/1.1 200 OK
 < Content-Type: text/html; charset=utf-8
-< Date: Sun, 15 Jan 2023 15:39:19 GMT
-< Content-Length: 21
+< Date: Sat, 04 Mar 2023 09:36:31 GMT
+< Content-Length: 91
 < 
 <h1>Welcome foo</h1>
-* Connection #0 to host localhost left intact
-```
 
-* Showdate as the private page after login
-```
-$ curl -v --cookie "sessionid=MTY3Mzc5NzA1MnxEdi1CQkFFQ180SUFBUkFCRUFBQVV2LUNBQUlHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJBNFRUSnhUMU5ETjAwMmJWaG9RbGRQQm5OMGNtbHVad3dKQUFkaFkyTnZkVzUwQm5OMGNtbHVad3dGQUFObWIyOD18rkB58Nha-bX9l5CIMRCqHIM1nu4muX3SVs2Bvq2NZIw=" http://localhost:8080/showdate
-*   Trying 127.0.0.1:8080...
-* Connected to localhost (127.0.0.1) port 8080 (#0)
-> GET /showdate HTTP/1.1
-> Host: localhost:8080
-> User-Agent: curl/7.87.0
-> Accept: */*
-> Cookie: sessionid=MTY3Mzc5NzA1MnxEdi1CQkFFQ180SUFBUkFCRUFBQVV2LUNBQUlHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJBNFRUSnhUMU5ETjAwMmJWaG9RbGRQQm5OMGNtbHVad3dKQUFkaFkyTnZkVzUwQm5OMGNtbHVad3dGQUFObWIyOD18rkB58Nha-bX9l5CIMRCqHIM1nu4muX3SVs2Bvq2NZIw=
-> 
-* Mark bundle as not supporting multiuse
-< HTTP/1.1 200 OK
-< Content-Type: text/plain; charset=utf-8
-< Date: Sun, 15 Jan 2023 15:40:00 GMT
-< Content-Length: 68
-< 
+<a href="/logout">Logout</a><br/>
+<a href="/adduser">Add an user</a>
 * Connection #0 to host localhost left intact
-Welcome foo 2023-01-15 23:40:00.150017036 +0800 CST m=+451.456109139
 ```
