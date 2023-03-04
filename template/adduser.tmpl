@@ -7,12 +7,10 @@
 Account:<input type="text" id="account" name="account" required><br>
 Password:<input type="password" id="passwd" name="passwd" required><br>
 Email:<input type="email" id="email" name="email" required><br>
-{{if .IsAdd1stUser}}
-<input type="hidden" name="role" value="Admininstrator">
-{{else}}
+{{if not .IsAdd1stUser}}
 Role:
-<input type="radio" name="role" value="Guest" checked>Guest
-<input type="radio" name="role" value="Administrator">Administrator
+<input type="checkbox" name="group" value="Guest" checked>Guest
+<input type="checkbox" name="group" value="Administrator">Administrator
 <br>
 {{end}}
 <input type="hidden" id="_csrf" name="_csrf" value="{{._csrf}}" />
@@ -27,12 +25,28 @@ $("#adduser").submit(function (event) {
   /* Stop form from submitting normally */
   event.preventDefault();
 
-  $.post(curpath, {
-    account: $("input[name='account']").val(),
-    passwd: $("input[name='passwd']").val(),
-    email: $("input[name='email']").val(),
-    role: $("input[name='role']:checked").val(),
-    _csrf: $("input[name='_csrf']").val(),
+{{if .IsAdd1stUser}}
+  groups = ["Guest", "Administrator"]
+{{else}}
+  group_ckds = $("input[name='group']:checked")
+  groups = []
+  for (let i = 0; i < group_ckds.length; i++)
+    groups.push(group_ckds[i].value)
+{{end}}
+
+  $.ajax({
+    type: "POST",
+    url: curpath,
+    data: JSON.stringify({
+      account: $("input[name='account']").val(),
+      passwd: $("input[name='passwd']").val(),
+      email: $("input[name='email']").val(),
+      groups: groups,
+    }),
+    contentType: "application/json;",
+    headers: {
+      "X-CSRF-TOKEN": $("input[name='_csrf']").val()
+    },
   }).done(function () {
     location.replace("/")
   }).fail(function (data) {

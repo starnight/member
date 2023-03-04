@@ -73,33 +73,39 @@ func AddUserHTML(c *gin.Context) {
   })
 }
 
+type addUser struct {
+  Account string `json:"account"`
+  Passwd string `json:"passwd"`
+  Email string `json:"email"`
+  Grp_names []string `json:"groups"`
+}
+
 func AddUser(c *gin.Context) {
-  account := c.PostForm("account")
-  passwd := c.PostForm("passwd")
-  email := c.PostForm("email")
+  var req_addUser addUser
   var group database.Group
+  var grp_names []string
 
-  if (c.Request.URL.Path == "/add1stuser") {
-    /* The first user should be an Administrator for following management */
-    group, _ = group_utils.Get("Administrator")
-  } else {
-    switch c.PostForm("role") {
-      case "Administrator":
-        group, _ = group_utils.Get("Administrator")
-      default:
-        group, _ = group_utils.Get("Guest")
-    }
-  }
+  c.BindJSON(&req_addUser)
 
-  groups := []database.Group{group}
-
-  if (account == "" || passwd == "" || email =="") {
+  if (req_addUser.Account == "" || req_addUser.Passwd == "" || req_addUser.Email == "") {
     c.String(http.StatusBadRequest, "Wrong account, password or email address")
     c.Abort()
     return
   }
 
-  user_utils.Add(account, hashSHA512(passwd), email, groups)
+  if (c.Request.URL.Path == "/add1stuser") {
+    grp_names = []string{"Administrator", "Guest"}
+  } else {
+    grp_names = req_addUser.Grp_names
+  }
+
+  groups := []database.Group{}
+  for _, grp_name := range grp_names {
+    group, _ = group_utils.Get(grp_name)
+    groups = append(groups, group)
+  }
+
+  user_utils.Add(req_addUser.Account, hashSHA512(req_addUser.Passwd), req_addUser.Email, groups)
 
   c.Status(http.StatusOK)
 }
@@ -179,25 +185,34 @@ func UpdateUserHTML(c *gin.Context) {
     return
   }
 
-  roles := make(map[string]uint)
-  gst_grp, _ := group_utils.Get("Guest")
-  roles["Guest"] = gst_grp.ID
+  tg_grp_names := []string{}
+  for _, grp := range tg_user.Groups {
+    tg_grp_names = append(tg_grp_names, grp.Name)
+  }
+
+  grp_names := []string{"Guest"}
   if (IsAuthorized(cur_id, "Administrator")) {
-    adm_grp, _ := group_utils.Get("Administrator")
-    roles["Administrator"] = adm_grp.ID
+    grp_names = append(grp_names, "Administrator")
   }
 
   c.HTML(http.StatusOK, "updateuser.tmpl", gin.H{
     "tg_id": tg_id,
     "tg_account": tg_user.Account,
     "tg_email": tg_user.Email,
-    "tg_role": tg_user.Groups[0].ID,
-    "roles": roles,
+    "tg_groups": tg_grp_names,
+    "groups": grp_names,
     "_csrf": csrf.GetToken(c),
   })
 }
 
+type updateUser struct {
+  Email string `json:"email"`
+  Grp_names []string `json:"groups"`
+}
+
 func UpdateUser(c *gin.Context) {
+  var req_updateUser updateUser
+
   tg_id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
   if (err != nil) {
     c.Status(http.StatusNotFound)
@@ -226,26 +241,26 @@ func UpdateUser(c *gin.Context) {
     return
   }
 
-  tg_email := c.PostForm("email")
-  tg_role := c.PostForm("role")
+  c.BindJSON(&req_updateUser)
 
   needupdate := false
 
-  if (tg_email != "") {
-    tg_user.Email = tg_email
+  if (req_updateUser.Email != "") {
+    tg_user.Email = req_updateUser.Email
     needupdate = true
   }
 
-  if (tg_role != "" && IsAuthorized(cur_id, "Administrator")) {
-    switch tg_role {
-      case "Administrator":
-        grp, _ := group_utils.Get("Administrator")
-        tg_user.Groups = []database.Group{grp}
-	needupdate = true
-      case "Guest":
-        grp, _ := group_utils.Get("Guest")
-        tg_user.Groups = []database.Group{grp}
-	needupdate = true
+  grp_names := req_updateUser.Grp_names
+  if (len(grp_names) != 0 && IsAuthorized(cur_id, "Administrator")) {
+    groups := []database.Group{}
+    for _, grp_name := range grp_names {
+      group, err_grp := group_utils.Get(grp_name)
+      if (err_grp != nil) {
+        continue
+      }
+      groups = append(groups, group)
+      tg_user.Groups = groups
+      needupdate = true
     }
   }
 

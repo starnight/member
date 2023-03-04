@@ -4,6 +4,7 @@ import (
   "github.com/gin-gonic/gin"
   "github.com/starnight/member/database"
 
+  "bytes"
   "fmt"
   "strings"
   "testing"
@@ -114,13 +115,10 @@ func TestAdd1stUser(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields */
   res3 := httptest.NewRecorder()
-  data1 := url.Values{}
-  data1.Set("account", "foo")
-  data1.Set("passwd", "bar")
-  data1.Set("email", "foo@bar.idv")
-  data1.Set("_csrf", csrf_token)
-  req3, _ := http.NewRequest("POST", "/add1stuser", strings.NewReader(data1.Encode()))
-  req3.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  data1 := []byte(`{"account":"foo","passwd":"bar","email":"foo@bar.idv"}`)
+  req3, _ := http.NewRequest("POST", "/add1stuser", bytes.NewBuffer(data1))
+  req3.Header.Set("Content-Type", "application/json")
+  req3.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req3, res2)
   r.ServeHTTP(res3, req3)
 
@@ -137,13 +135,10 @@ func TestAdd1stUser(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields again */
   res5 := httptest.NewRecorder()
-  data2 := url.Values{}
-  data2.Set("account", "fooagain")
-  data2.Set("passwd", "bar")
-  data2.Set("email", "fooagain@bar.idv")
-  data2.Set("_csrf", csrf_token)
-  req5, _ := http.NewRequest("POST", "/add1stuser", strings.NewReader(data2.Encode()))
-  req5.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  data2 := []byte(`{"account":"fooagain","passwd":"bar","email":"fooagain@bar.idv"}`)
+  req5, _ := http.NewRequest("POST", "/add1stuser", bytes.NewBuffer(data2))
+  req5.Header.Set("Content-Type", "application/json")
+  req5.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req5, res2)
   r.ServeHTTP(res5, req5)
 
@@ -397,14 +392,10 @@ func TestAddUserSuccess(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields to add a guest */
   res4 := httptest.NewRecorder()
-  data2 := url.Values{}
-  data2.Set("account", "foo2")
-  data2.Set("passwd", "bar2")
-  data2.Set("email", "foo2@bar2.idv")
-  data2.Set("role", "guest")
-  data2.Set("_csrf", csrf_token)
-  req4, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data2.Encode()))
-  req4.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  data2 := []byte(`{"account":"foo2","passwd":"bar2","email":"foo2@bar2.idv","groups":["Guest"]}`)
+  req4, _ := http.NewRequest("POST", "/adduser", bytes.NewBuffer(data2))
+  req4.Header.Set("Content-Type", "application/json")
+  req4.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req4, res2)
   r.ServeHTTP(res4, req4)
 
@@ -416,18 +407,15 @@ func TestAddUserSuccess(t *testing.T) {
   assert.Equal(t, "foo2", user2.Account)
   assert.Equal(t, hashSHA512("bar2"), user2.Passwd)
   assert.Equal(t, "foo2@bar2.idv", user2.Email)
+  assert.Equal(t, 1, len(user2.Groups))
   assert.Equal(t, "Guest", user2.Groups[0].Name)
 
   /* Requests with session, the CSRF token, and correct POST form fields to add another administrator */
   res5 := httptest.NewRecorder()
-  data3 := url.Values{}
-  data3.Set("account", "foo3")
-  data3.Set("passwd", "bar3")
-  data3.Set("email", "foo3@bar3.idv")
-  data3.Set("role", "Administrator")
-  data3.Set("_csrf", csrf_token)
-  req5, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data3.Encode()))
-  req5.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  data3 := []byte(`{"account":"foo3","passwd":"bar3","email":"foo3@bar3.idv","groups":["Guest","Administrator"]}`)
+  req5, _ := http.NewRequest("POST", "/adduser", bytes.NewBuffer(data3))
+  req5.Header.Set("Content-Type", "application/json")
+  req5.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req5, res2)
   r.ServeHTTP(res5, req5)
 
@@ -439,7 +427,8 @@ func TestAddUserSuccess(t *testing.T) {
   assert.Equal(t, "foo3", user3.Account)
   assert.Equal(t, hashSHA512("bar3"), user3.Passwd)
   assert.Equal(t, "foo3@bar3.idv", user3.Email)
-  assert.Equal(t, "Administrator", user3.Groups[0].Name)
+  assert.Equal(t, "Guest", user3.Groups[0].Name)
+  assert.Equal(t, "Administrator", user3.Groups[1].Name)
 }
 
 func TestGuestAddUser(t *testing.T) {
@@ -489,13 +478,10 @@ func TestGuestAddUser(t *testing.T) {
 
   /* Guest requests adduser with POST method */
   res5 := httptest.NewRecorder()
-  data2 := url.Values{}
-  data2.Set("account", "foo4")
-  data2.Set("passwd", "bar4")
-  data2.Set("email", "foo4@bar4.idv")
-  data2.Set("role", "Administrator")
-  data2.Set("_csrf", csrf_token)
-  req5, _ := http.NewRequest("POST", "/adduser", strings.NewReader(data2.Encode()))
+  data2 := []byte(`{"account":"foo4","passwd":"bar4","email":"foo4@bar4.idv","groups":["Administrator"]}`)
+  req5, _ := http.NewRequest("POST", "/adduser", bytes.NewBuffer(data2))
+  req5.Header.Set("Content-Type", "application/json")
+  req5.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req5, res4)
   r.ServeHTTP(res5, req5)
 
@@ -536,7 +522,7 @@ func TestGuestUpdateUser(t *testing.T) {
   r.ServeHTTP(res3, req3)
 
   expected_updateuser := "<h1>Update User</h1>"
-  expected_roles := "let available_roles = {\"Guest\":1};"
+  expected_roles := "let available_groups = [\"Guest\"];"
   expected_csrf := "name=\"_csrf\""
 
   assert.Equal(t, http.StatusOK, res3.Code)
@@ -549,12 +535,10 @@ func TestGuestUpdateUser(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields to update self */
   res4 := httptest.NewRecorder()
-  data2 := url.Values{}
-  data2.Set("email", "foo2@bar.idv")
-  data2.Set("role", "Administrator")
-  data2.Set("_csrf", csrf_token)
-  req4, _ := http.NewRequest("POST", "/updateuser/2", strings.NewReader(data2.Encode()))
-  req4.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  data2 := []byte(`{"email":"foo2@bar.idv","groups":["Administrator"]}`)
+  req4, _ := http.NewRequest("POST", "/updateuser/2", bytes.NewBuffer(data2))
+  req4.Header.Set("Content-Type", "application/json")
+  req4.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req4, res2)
   r.ServeHTTP(res4, req4)
 
@@ -566,6 +550,7 @@ func TestGuestUpdateUser(t *testing.T) {
   assert.Equal(t, "foo2", user2.Account)
   assert.Equal(t, hashSHA512("bar2"), user2.Passwd)
   assert.Equal(t, "foo2@bar.idv", user2.Email)
+  assert.Equal(t, 1, len(user2.Groups))
   assert.Equal(t, "Guest", user2.Groups[0].Name)
 
   /* Request updateuser with GET method to update an administrator */
@@ -579,8 +564,9 @@ func TestGuestUpdateUser(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields to update an administrator */
   res6 := httptest.NewRecorder()
-  req6, _ := http.NewRequest("POST", "/updateuser/3", strings.NewReader(data2.Encode()))
-  req6.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  req6, _ := http.NewRequest("POST", "/updateuser/3", bytes.NewBuffer(data2))
+  req6.Header.Set("Content-Type", "application/json")
+  req6.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req6, res2)
   r.ServeHTTP(res6, req6)
 
@@ -598,12 +584,13 @@ func TestGuestUpdateUser(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields to update an unexisted user */
   res8 := httptest.NewRecorder()
-  req8, _ := http.NewRequest("POST", "/updateuser/10", strings.NewReader(data2.Encode()))
-  req6.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  req8, _ := http.NewRequest("POST", "/updateuser/10", bytes.NewBuffer(data2))
+  req8.Header.Set("Content-Type", "application/json")
+  req8.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req8, res2)
   r.ServeHTTP(res8, req8)
 
-  assert.Equal(t, http.StatusBadRequest, res8.Code)
+  assert.Equal(t, http.StatusForbidden, res8.Code)
 
   /* Request updateuser with GET method to update a wrong user */
   res9 := httptest.NewRecorder()
@@ -616,8 +603,9 @@ func TestGuestUpdateUser(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields to update a wrong user */
   res10 := httptest.NewRecorder()
-  req10, _ := http.NewRequest("POST", "/updateuser/ABC10", strings.NewReader(data2.Encode()))
-  req10.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  req10, _ := http.NewRequest("POST", "/updateuser/ABC10", bytes.NewBuffer(data2))
+  req10.Header.Set("Content-Type", "application/json")
+  req10.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req10, res2)
   r.ServeHTTP(res10, req10)
 
@@ -659,7 +647,7 @@ func TestAdministratorUpdateUser(t *testing.T) {
   r.ServeHTTP(res3, req3)
 
   expected_updateuser := "<h1>Update User</h1>"
-  expected_roles := "let available_roles = {\"Administrator\":"
+  expected_roles := "let available_groups = [\"Guest\",\"Administrator\""
   expected_csrf := "name=\"_csrf\""
 
   assert.Equal(t, http.StatusOK, res3.Code)
@@ -672,12 +660,10 @@ func TestAdministratorUpdateUser(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields to update a Guest */
   res4 := httptest.NewRecorder()
-  data2 := url.Values{}
-  data2.Set("email", "foo2@bar.idvv")
-  data2.Set("role", "Administrator")
-  data2.Set("_csrf", csrf_token)
-  req4, _ := http.NewRequest("POST", "/updateuser/2", strings.NewReader(data2.Encode()))
-  req4.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  data2 := []byte(`{"email":"foo2@bar.idvv","groups":["Administrator"]}`)
+  req4, _ := http.NewRequest("POST", "/updateuser/2", bytes.NewBuffer(data2))
+  req4.Header.Set("Content-Type", "application/json")
+  req4.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req4, res2)
   r.ServeHTTP(res4, req4)
 
@@ -707,12 +693,10 @@ func TestAdministratorUpdateUser(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields to update an Administrator */
   res6 := httptest.NewRecorder()
-  data3 := url.Values{}
-  data3.Set("email", "foo2@bar.idv")
-  data3.Set("role", "Guest")
-  data3.Set("_csrf", csrf_token)
-  req6, _ := http.NewRequest("POST", "/updateuser/2", strings.NewReader(data3.Encode()))
-  req6.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  data3 := []byte(`{"email":"foo2@bar.idv","groups":["Guest"]}`)
+  req6, _ := http.NewRequest("POST", "/updateuser/2", bytes.NewBuffer(data3))
+  req6.Header.Set("Content-Type", "application/json")
+  req6.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req6, res2)
   r.ServeHTTP(res6, req6)
 
@@ -737,12 +721,14 @@ func TestAdministratorUpdateUser(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields to update an unexisted user */
   res8 := httptest.NewRecorder()
-  req8, _ := http.NewRequest("POST", "/updateuser/10", strings.NewReader(data3.Encode()))
-  req6.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  req8, _ := http.NewRequest("POST", "/updateuser/10", bytes.NewBuffer(data3))
+  req8.Header.Set("Content-Type", "application/json")
+  req8.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req8, res2)
   r.ServeHTTP(res8, req8)
 
-  assert.Equal(t, http.StatusBadRequest, res8.Code)
+  assert.Equal(t, http.StatusNotFound, res8.Code)
+  assert.Equal(t, "", res8.Body.String())
 
   /* Request updateuser with GET method to update a wrong user */
   res9 := httptest.NewRecorder()
@@ -755,8 +741,9 @@ func TestAdministratorUpdateUser(t *testing.T) {
 
   /* Requests with session, the CSRF token, and correct POST form fields to update a wrong user */
   res10 := httptest.NewRecorder()
-  req10, _ := http.NewRequest("POST", "/updateuser/ABC10", strings.NewReader(data2.Encode()))
-  req10.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+  req10, _ := http.NewRequest("POST", "/updateuser/ABC10", bytes.NewBuffer(data3))
+  req10.Header.Set("Content-Type", "application/json")
+  req10.Header.Set("X-CSRF-TOKEN", csrf_token)
   copyCookies(req10, res2)
   r.ServeHTTP(res10, req10)
 

@@ -6,7 +6,7 @@
 <h2>Updating {{.tg_account}}</h2>
 <form id="updateuser" method="POST">
 Email:<input type="email" id="email" name="email" value="{{.tg_email}}" required><br>
-<div id="roles">
+<div id="groups">
 Role:
 </div>
 <br>
@@ -14,22 +14,23 @@ Role:
 <input type="submit" value="Update">
 </form>
 <script>
-/* List new available roles options */
-let cur_role = {{.tg_role}};
-let available_roles = {{.roles}};
-let roles_node = document.getElementById("roles");
+/* List new available groups options */
+let cur_groups = {{.tg_groups}};
+let available_groups = {{.groups}};
+let groups_node = document.getElementById("groups");
 
-for (const [key, value] of Object.entries(available_roles)) {
-  let role_input_node = document.createElement("input");
-  let role_txt_node = document.createTextNode(key);
+for (let i = 0; i < available_groups.length; i++) {
+  let group_name = available_groups[i];
+  let group_input_node = document.createElement("input");
+  let group_txt_node = document.createTextNode(group_name);
 
-  role_input_node.setAttribute("type", "radio");
-  role_input_node.setAttribute("name", "role");
-  role_input_node.setAttribute("value", key);
-  if (value == cur_role)
-    role_input_node.setAttribute("checked", "");
-  roles_node.appendChild(role_input_node);
-  roles_node.appendChild(role_txt_node);
+  group_input_node.setAttribute("type", "checkbox");
+  group_input_node.setAttribute("name", "group");
+  group_input_node.setAttribute("value", group_name);
+  if ($.inArray(group_name, cur_groups) >= 0)
+    group_input_node.setAttribute("checked", "");
+  groups_node.appendChild(group_input_node);
+  groups_node.appendChild(group_txt_node);
 }
 
 /* Attach a submit handler to the form */
@@ -37,10 +38,22 @@ $("#updateuser").submit(function (event) {
   /* Stop form from submitting normally */
   event.preventDefault();
 
-  $.post("/updateuser/{{.tg_id}}", {
-    email: $("input[name='email']").val(),
-    role: $("input[name='role']:checked").val(),
-    _csrf: $("input[name='_csrf']").val(),
+  group_ckds = $("input[name='group']:checked")
+  groups = []
+  for (let i = 0; i < group_ckds.length; i++)
+    groups.push(group_ckds[i].value)
+
+  $.ajax({
+    type: "POST",
+    url: "/updateuser/{{.tg_id}}",
+    data: JSON.stringify({
+      email: $("input[name='email']").val(),
+      groups: groups,
+    }),
+    contentType: "application/json;",
+    headers: {
+      "X-CSRF-TOKEN": $("input[name='_csrf']").val()
+    },
   }).done(function () {
     location.replace("/")
   }).fail(function (data) {
