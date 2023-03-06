@@ -1,6 +1,11 @@
 package main
 
 import (
+  "fmt"
+  "os"
+
+  "github.com/alexflint/go-arg"
+
   "github.com/gin-gonic/gin"
   "github.com/gin-contrib/sessions"
   "github.com/gin-contrib/sessions/cookie"
@@ -48,9 +53,30 @@ func setupRouter() *gin.Engine {
   return r
 }
 
+func parseArgs() string {
+  var addrStr string
+  var args struct {
+    Port uint `help:"listening port"`
+  }
+
+  arg.MustParse(&args)
+
+  if (args.Port > 0) {
+    addrStr = fmt.Sprintf(":%d", args.Port)
+  } else if (os.Getenv("PORT") != "") {
+    addrStr = ":" + os.Getenv("PORT")
+  } else {
+    addrStr = ":8080"
+  }
+
+  return addrStr
+}
+
 func main() {
+  addrStr := parseArgs()
+
   setupDB()
 
   r := setupRouter()
-  r.Run(":8080")
+  r.Run(addrStr)
 }

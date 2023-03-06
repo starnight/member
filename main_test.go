@@ -6,6 +6,7 @@ import (
 
   "bytes"
   "fmt"
+  "os"
   "strings"
   "testing"
   "time"
@@ -58,6 +59,17 @@ func getCSRFToken(res *httptest.ResponseRecorder) (token string) {
   }
 
   return token
+}
+
+func TestParseArgs(t *testing.T) {
+  os.Args = []string{"example"}
+  assert.Equal(t, ":8080", parseArgs())
+
+  os.Setenv("PORT", "8787")
+  assert.Equal(t, ":8787", parseArgs())
+
+  os.Args = []string{"examplea", "--port", "8765"}
+  assert.Equal(t, ":8765", parseArgs())
 }
 
 func TestSetupDB(t *testing.T) {
