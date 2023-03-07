@@ -53,22 +53,28 @@ func setupRouter() *gin.Engine {
   return r
 }
 
-func parseArgs() string {
+func dealAddr(port uint) string {
   var addrStr string
-  var args struct {
-    Port uint `help:"listening port"`
-  }
 
-  arg.MustParse(&args)
-
-  if (args.Port > 0) {
-    addrStr = fmt.Sprintf(":%d", args.Port)
+  if (port > 0) {
+    addrStr = fmt.Sprintf(":%d", port)
   } else if (os.Getenv("PORT") != "") {
     addrStr = ":" + os.Getenv("PORT")
   } else {
     addrStr = ":8080"
   }
 
+  return addrStr
+}
+
+func parseArgs() string {
+  var args struct {
+    Port uint `help:"listening port"`
+  }
+
+  arg.MustParse(&args)
+
+  addrStr := dealAddr(args.Port)
   return addrStr
 }
 
