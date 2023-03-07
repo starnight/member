@@ -13,6 +13,7 @@ import (
   "net/http"
   "net/url"
   "github.com/stretchr/testify/assert"
+  "github.com/stretchr/testify/mock"
 )
 
 func TestParseArgs(t *testing.T) {
@@ -45,6 +46,26 @@ func TestSetupDB(t *testing.T) {
 
   assert.Equal(t, cnt, int64(0))
   assert.Nil(t, err)
+}
+
+type mock_Engine struct {
+  mock.Mock
+}
+
+func (m_engine *mock_Engine) Run(addr ...string) (err error) {
+  args := m_engine.Called(addr)
+  return args.Error(0)
+}
+
+func TestDoRun(t *testing.T) {
+  m_engine := mock_Engine{}
+  cfg := configSet{}
+
+  cfg.AddrStr = "test addr"
+  expected_str := []string{cfg.AddrStr}
+  m_engine.On("Run", expected_str).Return(nil)
+  doRun(&m_engine, cfg)
+  m_engine.AssertCalled(t, "Run", expected_str)
 }
 
 func TestPing(t *testing.T) {

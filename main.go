@@ -73,11 +73,21 @@ func parseArgs() configSet {
   return cfg
 }
 
+type IGinEngine interface {
+  /* Follow gin's Engine format by each version */
+  /* Run() https://github.com/gin-gonic/gin/blob/v1.9.0/gin.go#L376 */
+  Run(addr ...string) (err error)
+}
+
+func doRun(r IGinEngine, cfg configSet) {
+  r.Run(cfg.AddrStr)
+}
+
 func main() {
   cfg := parseArgs()
 
   setupDB()
 
   r := setupRouter()
-  r.Run(cfg.AddrStr)
+  doRun(r, cfg)
 }
