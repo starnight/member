@@ -67,22 +67,28 @@ func dealAddr(port uint) string {
   return addrStr
 }
 
-func parseArgs() string {
+type configSet struct {
+  AddrStr string
+}
+
+func parseArgs() configSet {
+  cfg := configSet{}
   var args struct {
     Port uint `help:"listening port"`
   }
 
   arg.MustParse(&args)
 
-  addrStr := dealAddr(args.Port)
-  return addrStr
+  cfg.AddrStr = dealAddr(args.Port)
+
+  return cfg
 }
 
 func main() {
-  addrStr := parseArgs()
+  cfg := parseArgs()
 
   setupDB()
 
   r := setupRouter()
-  r.Run(addrStr)
+  r.Run(cfg.AddrStr)
 }

@@ -62,14 +62,19 @@ func getCSRFToken(res *httptest.ResponseRecorder) (token string) {
 }
 
 func TestParseArgs(t *testing.T) {
+  var cfg configSet
+
   os.Args = []string{"example"}
-  assert.Equal(t, ":8080", parseArgs())
+  cfg = parseArgs()
+  assert.Equal(t, ":8080", cfg.AddrStr)
 
   os.Setenv("PORT", "8787")
-  assert.Equal(t, ":8787", parseArgs())
+  cfg = parseArgs()
+  assert.Equal(t, ":8787", cfg.AddrStr)
 
-  os.Args = []string{"examplea", "--port", "8765"}
-  assert.Equal(t, ":8765", parseArgs())
+  os.Args = []string{"example", "--port", "8765"}
+  cfg = parseArgs()
+  assert.Equal(t, ":8765", cfg.AddrStr)
 }
 
 func TestSetupDB(t *testing.T) {
