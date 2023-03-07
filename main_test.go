@@ -15,6 +15,49 @@ import (
   "github.com/stretchr/testify/assert"
 )
 
+func TestParseArgs(t *testing.T) {
+  var cfg configSet
+
+  os.Args = []string{"example"}
+  cfg = parseArgs()
+  assert.Equal(t, ":8080", cfg.AddrStr)
+
+  os.Setenv("PORT", "8787")
+  cfg = parseArgs()
+  assert.Equal(t, ":8787", cfg.AddrStr)
+
+  os.Args = []string{"example", "--port", "8765"}
+  cfg = parseArgs()
+  assert.Equal(t, ":8765", cfg.AddrStr)
+}
+
+func TestSetupDB(t *testing.T) {
+  setupDB()
+
+  dbstr := database.GetDBStr(gin.Mode())
+  db := database.ConnectDB(dbstr)
+
+  assert.NotNil(t, db)
+
+  utils := database.UserUtils{DB: db}
+
+  cnt, err := utils.Count()
+
+  assert.Equal(t, cnt, int64(0))
+  assert.Nil(t, err)
+}
+
+func TestPing(t *testing.T) {
+  r := setupRouter()
+
+  res := httptest.NewRecorder()
+  req, _ := http.NewRequest("GET", "/ping", nil)
+  r.ServeHTTP(res, req)
+
+  assert.Equal(t, http.StatusOK, res.Code)
+  assert.Equal(t, "pong", res.Body.String())
+}
+
 func copyCookies(req *http.Request, res *httptest.ResponseRecorder) {
   req.Header.Set("Cookie", strings.Join(res.Header().Values("Set-Cookie"), "; "))
 }
@@ -57,49 +100,6 @@ func getCSRFToken(res *httptest.ResponseRecorder) (token string) {
   }
 
   return token
-}
-
-func TestParseArgs(t *testing.T) {
-  var cfg configSet
-
-  os.Args = []string{"example"}
-  cfg = parseArgs()
-  assert.Equal(t, ":8080", cfg.AddrStr)
-
-  os.Setenv("PORT", "8787")
-  cfg = parseArgs()
-  assert.Equal(t, ":8787", cfg.AddrStr)
-
-  os.Args = []string{"example", "--port", "8765"}
-  cfg = parseArgs()
-  assert.Equal(t, ":8765", cfg.AddrStr)
-}
-
-func TestSetupDB(t *testing.T) {
-  setupDB()
-
-  dbstr := database.GetDBStr(gin.Mode())
-  db := database.ConnectDB(dbstr)
-
-  assert.NotNil(t, db)
-
-  utils := database.UserUtils{DB: db}
-
-  cnt, err := utils.Count()
-
-  assert.Equal(t, cnt, int64(0))
-  assert.Nil(t, err)
-}
-
-func TestPing(t *testing.T) {
-  r := setupRouter()
-
-  res := httptest.NewRecorder()
-  req, _ := http.NewRequest("GET", "/ping", nil)
-  r.ServeHTTP(res, req)
-
-  assert.Equal(t, http.StatusOK, res.Code)
-  assert.Equal(t, "pong", res.Body.String())
 }
 
 func TestAdd1stUser(t *testing.T) {
