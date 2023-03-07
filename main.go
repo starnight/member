@@ -2,7 +2,6 @@ package main
 
 import (
   "fmt"
-  "os"
 
   "github.com/alexflint/go-arg"
 
@@ -14,6 +13,10 @@ import (
   "github.com/starnight/member/middleware"
   "github.com/starnight/member/database"
 )
+
+type configSet struct {
+  AddrStr string
+}
 
 func setupDB() {
   dbstr := database.GetDBStr(gin.Mode())
@@ -54,27 +57,13 @@ func setupRouter() *gin.Engine {
 }
 
 func dealAddr(port uint) string {
-  var addrStr string
-
-  if (port > 0) {
-    addrStr = fmt.Sprintf(":%d", port)
-  } else if (os.Getenv("PORT") != "") {
-    addrStr = ":" + os.Getenv("PORT")
-  } else {
-    addrStr = ":8080"
-  }
-
-  return addrStr
-}
-
-type configSet struct {
-  AddrStr string
+  return fmt.Sprintf(":%d", port)
 }
 
 func parseArgs() configSet {
   cfg := configSet{}
   var args struct {
-    Port uint `help:"listening port"`
+    Port uint `arg:"env:PORT" default:"8080" help:"listening port"`
   }
 
   arg.MustParse(&args)
