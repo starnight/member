@@ -5,11 +5,9 @@ import (
   "github.com/starnight/member/database"
 
   "bytes"
-  "fmt"
   "os"
   "strings"
   "testing"
-  "time"
   "golang.org/x/net/html"
   "net/http/httptest"
   "net/http"
@@ -175,17 +173,6 @@ func TestRootWithoutLogin(t *testing.T) {
   assert.Equal(t, expected_body, res.Body.String()[:len(expected_body)])
 }
 
-func TestShowdateWithoutLogin(t *testing.T) {
-  r := setupRouter()
-
-  res := httptest.NewRecorder()
-  req, _ := http.NewRequest("GET", "/showdate", nil)
-  r.ServeHTTP(res, req)
-
-  assert.Equal(t, http.StatusForbidden, res.Code)
-  assert.Equal(t, "Please login first", res.Body.String())
-}
-
 func TestFailedLogin(t *testing.T) {
   r := setupRouter()
 
@@ -243,7 +230,7 @@ func TestFailedLogin(t *testing.T) {
   assert.Equal(t, "Wrong account or password", res4.Body.String())
 }
 
-func TestLoginAndShowdate(t *testing.T) {
+func TestLogin(t *testing.T) {
   r := setupRouter()
 
   /* Have the session and the CSRF token for following POST request */
@@ -270,22 +257,13 @@ func TestLoginAndShowdate(t *testing.T) {
   assert.Equal(t, "", res2.Body.String())
 
   res3 := httptest.NewRecorder()
-  req3, _ := http.NewRequest("GET", "/showdate", nil)
+  req3, _ := http.NewRequest("GET", "/", nil)
   copyCookies(req3, res2)
   r.ServeHTTP(res3, req3)
 
-  assert.Equal(t, http.StatusOK, res3.Code)
-  body := fmt.Sprintf("Welcome %s %s", data.Get("account"), time.Now().Format("2006-01-02"))
-  assert.Equal(t, body, res3.Body.String()[:len(body)])
-
-  res4 := httptest.NewRecorder()
-  req4, _ := http.NewRequest("GET", "/", nil)
-  copyCookies(req4, res2)
-  r.ServeHTTP(res4, req4)
-
   expected_index := "<h1>Welcome foo</h1>\n"
-  assert.Equal(t, http.StatusOK, res4.Code)
-  assert.True(t, strings.Contains(res4.Body.String(), expected_index))
+  assert.Equal(t, http.StatusOK, res3.Code)
+  assert.True(t, strings.Contains(res3.Body.String(), expected_index))
 }
 
 func TestAddUserWrong(t *testing.T) {

@@ -1,9 +1,7 @@
 package main
 
 import (
-  "fmt"
   "strconv"
-  "time"
   "crypto/sha512"
   "encoding/hex"
   "net/http"
@@ -267,15 +265,6 @@ func UpdateUser(c *gin.Context) {
   if (needupdate) {
     user_utils.Update(&tg_user)
   }
-}
-
-func Showdate(c *gin.Context) {
-  session := sessions.Default(c)
-  account := session.Get("account")
-  currentTime := time.Now()
-
-  res := fmt.Sprintf("Welcome %s %s", account, currentTime.String())
-  c.String(http.StatusOK, res)
 }
 
 func Logout(c *gin.Context) {

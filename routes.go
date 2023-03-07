@@ -18,6 +18,5 @@ func PrivateRoutes (g *gin.RouterGroup) {
   g.POST("/adduser", AddUser)
   g.GET("/updateuser/:id", UpdateUserHTML)
   g.POST("/updateuser/:id", UpdateUser)
-  g.GET("/showdate", Showdate)
   g.GET("/logout", Logout)
 }
