@@ -16,6 +16,7 @@ import (
 
 type configSet struct {
   AddrStr string
+  Routes bool
 }
 
 func setupDB() {
@@ -64,11 +65,13 @@ func parseArgs() configSet {
   cfg := configSet{}
   var args struct {
     Port uint `arg:"env:PORT" default:"8080" help:"listening port"`
+    Routes bool `default:"false" help:"only list routes"`
   }
 
   arg.MustParse(&args)
 
   cfg.AddrStr = dealAddr(args.Port)
+  cfg.Routes = args.Routes
 
   return cfg
 }
@@ -77,10 +80,23 @@ type IGinEngine interface {
   /* Follow gin's Engine format by each version */
   /* Run() https://github.com/gin-gonic/gin/blob/v1.9.0/gin.go#L376 */
   Run(addr ...string) (err error)
+  /* Routes() https://github.com/gin-gonic/gin/blob/v1.9.0/gin.go#L349 */
+  Routes() (routes gin.RoutesInfo)
+}
+
+func printRoutes(routes gin.RoutesInfo) {
+  for _, route := range routes {
+    fmt.Printf("Method: %s\t%s\n", route.Method, route.Path)
+  }
 }
 
 func doRun(r IGinEngine, cfg configSet) {
-  r.Run(cfg.AddrStr)
+  if (cfg.Routes) {
+    rts := r.Routes()
+    printRoutes(rts)
+  } else {
+    r.Run(cfg.AddrStr)
+  }
 }
 
 func main() {

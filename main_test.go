@@ -57,7 +57,12 @@ func (m_engine *mock_Engine) Run(addr ...string) (err error) {
   return args.Error(0)
 }
 
-func TestDoRun(t *testing.T) {
+func (m_engine *mock_Engine) Routes() (routes gin.RoutesInfo) {
+  args := m_engine.Called()
+  return args.Get(0).(gin.RoutesInfo)
+}
+
+func TestRunInDoRun(t *testing.T) {
   m_engine := mock_Engine{}
   cfg := configSet{}
 
@@ -66,6 +71,26 @@ func TestDoRun(t *testing.T) {
   m_engine.On("Run", expected_str).Return(nil)
   doRun(&m_engine, cfg)
   m_engine.AssertCalled(t, "Run", expected_str)
+  m_engine.AssertNotCalled(t, "Routes")
+}
+
+func TestRoutesInDoRun(t *testing.T) {
+  m_engine := mock_Engine{}
+  cfg := configSet{}
+
+  /* Test Routes */
+  cfg.AddrStr = "test addr"
+  cfg.Routes = true
+  expected_str := []string{cfg.AddrStr}
+  rts := gin.RoutesInfo{
+    gin.RouteInfo{Method: "GET", Path: "/index"},
+    gin.RouteInfo{Method: "GET", Path: "/hello"},
+    gin.RouteInfo{Method: "POST", Path: "/hello"},
+  }
+  m_engine.On("Routes").Return(rts)
+  doRun(&m_engine, cfg)
+  m_engine.AssertNotCalled(t, "Run", expected_str)
+  m_engine.AssertCalled(t, "Routes")
 }
 
 func TestPing(t *testing.T) {
