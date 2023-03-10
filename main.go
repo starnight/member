@@ -102,7 +102,11 @@ func doRun(r IGinEngine, cfg configSet) {
 func main() {
   cfg := parseArgs()
 
-  setupDB()
+  if (cfg.Routes) {
+    gin.SetMode(gin.ReleaseMode)
+  } else {
+    setupDB()
+  }
 
   r := setupRouter()
   doRun(r, cfg)
