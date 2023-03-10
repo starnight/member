@@ -2,6 +2,7 @@ package main
 
 import (
   "fmt"
+  "encoding/json"
 
   "github.com/alexflint/go-arg"
 
@@ -62,7 +63,7 @@ func parseArgs() configSet {
   cfg := configSet{}
   var args struct {
     Port uint `arg:"env:PORT" default:"8080" help:"listening port"`
-    Routes bool `default:"false" help:"only list routes"`
+    Routes bool `default:"false" help:"only list routes in JSON format"`
   }
 
   arg.MustParse(&args)
@@ -81,10 +82,20 @@ type IGinEngine interface {
   Routes() (routes gin.RoutesInfo)
 }
 
+type Jroute struct {
+  Method string `json:"method"`
+  Path string `json:"path"`
+}
+
 func printRoutes(routes gin.RoutesInfo) {
+  jrts := []Jroute{}
+
   for _, route := range routes {
-    fmt.Printf("Method: %s\t%s\n", route.Method, route.Path)
+    jrts = append(jrts, Jroute{Method: route.Method, Path: route.Path})
   }
+
+  data, _ := json.Marshal(jrts)
+  fmt.Println(string(data))
 }
 
 func doRun(r IGinEngine, cfg configSet) {
