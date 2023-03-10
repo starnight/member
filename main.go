@@ -22,11 +22,8 @@ type configSet struct {
 func setupDB() {
   dbstr := database.GetDBStr(gin.Mode())
   db := database.ConnectDB(dbstr)
-  utils := database.UserUtils{DB: db}
 
-  _, err := utils.Count()
-
-  if (err != nil) {
+  if (!db.Migrator().HasTable("users")) {
     database.InitTables(db)
   }
 }
